@@ -44,6 +44,9 @@ class Person(models.Model):
     )
     hours = models.IntegerField(default=0)
     tokens = models.IntegerField(default=0)
+    phone = models.CharField(null=True, blank=True, default=None)
+    email = models.EmailField(null=True, blank=True, default=None)
+    info = models.CharField(null=True, blank=True, default=None)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username

@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
+from .forms import CustomUserCreationForm
 from .models import VolunteerProfile
 
 
@@ -25,13 +26,15 @@ class CustomLoginView(LoginView):
 def register(request):
     if request.user.is_authenticated:
         return redirect('profile')
-    form = UserCreationForm(request.POST if request.method == 'POST' else None)
-    if request.method == 'POST' and form.is_valid():
-        with transaction.atomic():
+
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
             user = form.save()
-            VolunteerProfile.objects.get_or_create(user=user)
-        login(request, user)
-        return redirect('profile')
+            login(request, user)
+            return redirect('profile')
+    else:
+        form = CustomUserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
 
