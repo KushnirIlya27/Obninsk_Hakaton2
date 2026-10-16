@@ -1,0 +1,15 @@
+{% extends "admin/base_site.html" %}
+{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Главная</a> › <a href="{% url 'admin:catalog_activity_changelist' %}">Заявки</a> › Проверка</div>{% endblock %}
+{% block content %}
+<div class="module aligned">
+  <h2>{{ original.event.title }}</h2>
+  <p>Волонтёр: <strong>{{ original.volunteer }}</strong></p>
+  <p>Заявлено часов: {{ original.requested_hours|default_if_none:"ещё не указаны" }}. Статус: {{ original.get_status_display }}.</p>
+  {% if already_reviewed %}<p><strong>Заявка уже рассмотрена. Повторное начисление запрещено.</strong></p>{% endif %}
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    {% if not already_reviewed %}<div class="submit-row"><input type="submit" value="Сохранить решение" class="default"></div>{% endif %}
+  </form>
+  <p>Койны начисляются только после подтверждения. Это учебная система: койны не являются деньгами и не гарантируют настоящую награду.</p>
+</div>
+{% endblock %}

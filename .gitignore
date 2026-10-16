@@ -218,3 +218,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# File-backed concurrency test database
+test_concurrency.sqlite3*
