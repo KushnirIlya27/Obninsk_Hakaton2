@@ -1,0 +1,29 @@
+[
+  {
+    "model": "shop.item",
+    "pk": 1,
+    "fields": {
+      "name": "Зелье здоровья",
+      "price": 50,
+      "description": "Восстанавливает 100 HP"
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 2,
+    "fields": {
+      "name": "Меч новичка",
+      "price": 150,
+      "description": "Урон +10"
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 3,
+    "fields": {
+      "name": "Щит удачи",
+      "price": 200,
+      "description": "Шанс блока 15%"
+    }
+  }
+]
