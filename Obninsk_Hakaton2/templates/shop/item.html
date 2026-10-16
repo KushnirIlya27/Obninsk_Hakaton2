@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ item.name }}</title>
+    <link rel="stylesheet" href="{% static 'css/shop.css' %}">
+</head>
+<body>
+    {% if messages %}
+        <ul class="messages">
+            {% for m in messages %}
+                <li class="{{ m.tags }}">{{ m }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <h1>{{ item.name }}</h1>
+    <p><b>Цена:</b> {{ item.price }} коинов</p>
+    <p>{{ item.description }}</p>
+
+    {% if user.is_authenticated %}
+        <form method="post" action="{% url 'shop:buy' item.id %}">
+            {% csrf_token %}
+            <button type="submit" class="buy-btn">Обменять за {{ item.price }} коинов</button>
+        </form>
+    {% else %}
+        <p><a href="{% url 'login' %}?next={{ request.path }}">Войдите</a>, чтобы купить</p>
+    {% endif %}
+
+    <a href="{% url 'shop:index' %}">← Назад в магазин</a>
+</body>
+</html>
