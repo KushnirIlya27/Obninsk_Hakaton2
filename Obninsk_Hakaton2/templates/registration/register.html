@@ -22,13 +22,13 @@
                 {% endif %}
 
                 <input type="password" id="Password" name="password1" placeholder="Пароль" required
-                       value="{{ form.password1.value|default_if_none:'' }}">
+>
                 {% if form.password1.errors %}
                     <div class="error">{{ form.password1.errors }}</div>
                 {% endif %}
 
                 <input type="password" id="Password2" name="password2" placeholder="Подтверждение пароля" required
-                       value="{{ form.password2.value|default_if_none:'' }}">
+>
                 {% if form.password2.errors %}
                     <div class="error">{{ form.password2.errors }}</div>
                 {% endif %}
@@ -40,6 +40,6 @@
         </div>
     </div>
     <!-- Если JS больше не нужен для отправки формы, можете убрать ссылку -->
-    <script src="{% static 'js/RegisterScript.js' %}" defer></script>
+
 </body>
 </html>

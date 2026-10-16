@@ -12,6 +12,7 @@
             <h2 id="Log">Вход</h2>
             <form method="post" action="{% url 'login' %}">
                 {% csrf_token %}
+                {{ form.non_field_errors }}
                 <input type="text" name="username" id="Login" placeholder="Логин" required>
                 <input type="password" name="password" id="Password" placeholder="Пароль" required>
                 <button type="submit" id="ActBtn">Войти</button>
@@ -19,6 +20,6 @@
             <a id="Reg" href="{% url 'register' %}">Регистрация</a>
         </div>
     </div>
-    <script src="{% static 'js/LoginScript.js' %}" defer></script>
+
 </body>
 </html>
