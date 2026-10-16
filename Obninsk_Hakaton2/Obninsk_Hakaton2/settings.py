@@ -32,7 +32,6 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 if not DEBUG and not os.environ.get("DJANGO_SECRET_KEY"):
     raise ImproperlyConfigured("Set DJANGO_SECRET_KEY when DJANGO_DEBUG=0")
 
-ALLOWED_HOSTS = ['*']
 
 ALLOWED_HOSTS = os.environ.get(
     "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]"
