@@ -3,27 +3,54 @@
     "model": "shop.item",
     "pk": 1,
     "fields": {
-      "name": "Зелье здоровья",
+      "name": "Курс по программированию",
       "price": 50,
-      "description": "Восстанавливает 100 HP"
+      "description": "описание"
     }
   },
   {
     "model": "shop.item",
     "pk": 2,
     "fields": {
-      "name": "Меч новичка",
+      "name": "Поездка на 67 хакатон",
       "price": 150,
-      "description": "Урон +10"
+      "description": "описание"
     }
   },
   {
     "model": "shop.item",
     "pk": 3,
     "fields": {
-      "name": "Щит удачи",
+      "name": "Практика T-BANK",
       "price": 200,
-      "description": "Шанс блока 15%"
+      "description": "описание"
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 4,
+    "fields": {
+      "name": "Курс в Сбер",
+      "price": 50,
+      "description": "описание"
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 5,
+    "fields": {
+      "name": "Курс английского до уровня C1",
+      "price": 50,
+      "description": "описание"
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 6,
+    "fields": {
+      "name": "Курс по матанализу",
+      "price": 50,
+      "description": "описание"
     }
   }
 ]
