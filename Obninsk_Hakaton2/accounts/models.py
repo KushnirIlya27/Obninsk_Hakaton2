@@ -40,7 +40,7 @@ class Person(models.Model):
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
-        related_name="person",
+        related_name="account",
     )
     hours = models.IntegerField(default=0)
     tokens = models.IntegerField(default=0)

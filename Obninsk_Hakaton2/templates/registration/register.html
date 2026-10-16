@@ -3,7 +3,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Register</title>
+    <title>Регистрация</title>
     <link rel="stylesheet" href="{% static 'css/register.css' %}">
 </head>
 <body>
@@ -11,24 +11,67 @@
         <div id="Window">
             <h2 id="Reg">Регистрация</h2>
 
-            <!-- Добавляем тег form с методом POST -->
             <form method="post" action="{% url 'register' %}">
                 {% csrf_token %}
 
-                <input type="text" id="Login" name="username" placeholder="Логин" required
+                {% if form.non_field_errors %}
+                    <div class="error">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <input type="text"
+                       id="Login"
+                       name="username"
+                       placeholder="Логин"
+                       required
                        value="{{ form.username.value|default_if_none:'' }}">
                 {% if form.username.errors %}
                     <div class="error">{{ form.username.errors }}</div>
                 {% endif %}
 
-                <input type="password" id="Password" name="password1" placeholder="Пароль" required
->
+                <input type="email"
+                       id="Email"
+                       name="email"
+                       placeholder="Почта"
+                       required
+                       value="{{ form.email.value|default_if_none:'' }}">
+                {% if form.email.errors %}
+                    <div class="error">{{ form.email.errors }}</div>
+                {% endif %}
+
+                <input type="text"
+                       id="Phone"
+                       name="phone"
+                       placeholder="Телефон"
+                       required
+                       value="{{ form.phone.value|default_if_none:'' }}">
+                {% if form.phone.errors %}
+                    <div class="error">{{ form.phone.errors }}</div>
+                {% endif %}
+
+                <input type="text"
+                       id="Info"
+                       name="info"
+                       placeholder="Информация о себе"
+                       required
+                       value="{{ form.info.value|default_if_none:'' }}">
+                {% if form.info.errors %}
+                    <div class="error">{{ form.info.errors }}</div>
+                {% endif %}
+
+                <input type="password"
+                       id="Password"
+                       name="password1"
+                       placeholder="Пароль"
+                       required>
                 {% if form.password1.errors %}
                     <div class="error">{{ form.password1.errors }}</div>
                 {% endif %}
 
-                <input type="password" id="Password2" name="password2" placeholder="Подтверждение пароля" required
->
+                <input type="password"
+                       id="Password2"
+                       name="password2"
+                       placeholder="Подтверждение пароля"
+                       required>
                 {% if form.password2.errors %}
                     <div class="error">{{ form.password2.errors }}</div>
                 {% endif %}
@@ -39,7 +82,5 @@
             <a id="Back" href="{% url 'login' %}">Назад</a>
         </div>
     </div>
-    <!-- Если JS больше не нужен для отправки формы, можете убрать ссылку -->
-
 </body>
 </html>

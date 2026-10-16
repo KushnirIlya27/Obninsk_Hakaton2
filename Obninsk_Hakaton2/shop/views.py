@@ -1,14 +1,20 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, Profile, Purchase
+from django.shortcuts import get_object_or_404, redirect, render
+
+from .models import Item, Purchase
+from accounts.models import Person   # ← Person живёт в accounts
 
 
 def index(request):
     items = Item.objects.all()
-    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
-    return render(request, "shop/index.html", {"items": items, "profile": profile})
+    person = (
+        getattr(request.user, "account", None)   # ← было "person"
+        if request.user.is_authenticated
+        else None
+    )
+    return render(request, "shop/index.html", {"items": items, "person": person})
 
 
 def item_detail(request, item_id):
@@ -22,17 +28,19 @@ def buy(request, item_id):
         return redirect("shop:item_detail", item_id=item_id)
 
     item = get_object_or_404(Item, pk=item_id)
-    profile, _ = Profile.objects.get_or_create(user=request.user)
+    person, _ = Person.objects.get_or_create(user=request.user)
 
-    if profile.coins < item.price:
-        messages.error(request, f"Недостаточно коинов: нужно {item.price}, у вас {profile.coins}")
+    if person.tokens < item.price:
+        messages.error(
+            request,
+            f"Недостаточно токенов: нужно {item.price}, у вас {person.tokens}",
+        )
         return redirect("shop:item_detail", item_id=item.id)
 
-    # Атомарно: списываем и пишем покупку
     with transaction.atomic():
-        profile.coins -= item.price
-        profile.save(update_fields=["coins"])
+        person.tokens -= item.price
+        person.save(update_fields=["tokens"])
         Purchase.objects.create(user=request.user, item=item)
 
-    messages.success(request, f"Вы купили «{item.name}» за {item.price} коинов")
+    messages.success(request, f"Вы купили «{item.name}» за {item.price} токенов")
     return redirect("shop:item_detail", item_id=item.id)

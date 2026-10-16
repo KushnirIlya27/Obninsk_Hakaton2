@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from .models import Person
 
+
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         required=True,
@@ -14,18 +15,19 @@ class CustomUserCreationForm(UserCreationForm):
         label="Телефон",
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
-
     info = forms.CharField(
         required=True,
         label="Информация о себе",
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
-
-
     class Meta:
         model = User
-        fields = ("info","email", "phone", "password1", "password2")
+        # только реальные поля User + стандартные поля UserCreationForm
+        fields = ("username", "password1", "password2")
+        widgets = {
+            "username": forms.TextInput(attrs={"class": "form-control"}),
+        }
 
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
@@ -34,7 +36,7 @@ class CustomUserCreationForm(UserCreationForm):
         return email
 
     def clean_phone(self):
-        phone = self.cleaned_data["phone"].lower()
+        phone = self.cleaned_data["phone"]
         if Person.objects.filter(phone=phone).exists():
             raise forms.ValidationError("Пользователь с таким телефоном уже существует")
         return phone
@@ -45,10 +47,9 @@ class CustomUserCreationForm(UserCreationForm):
 
         if commit:
             user.save()
-            person, created = Person.objects.get_or_create(user=user)
+            person, _ = Person.objects.get_or_create(user=user)
             person.phone = self.cleaned_data["phone"]
             person.email = self.cleaned_data["email"]
             person.info = self.cleaned_data["info"]
             person.save()
         return user
-
