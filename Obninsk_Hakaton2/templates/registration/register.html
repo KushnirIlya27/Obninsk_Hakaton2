@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Register</title>
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+</head>
+<body>
+    <div id="Main">
+        <div id="Window">
+            <h2 id="Reg">Регистрация</h2>
+
+            <!-- Добавляем тег form с методом POST -->
+            <form method="post" action="{% url 'register' %}">
+                {% csrf_token %}
+
+                <input type="text" id="Login" name="username" placeholder="Логин" required
+                       value="{{ form.username.value|default_if_none:'' }}">
+                {% if form.username.errors %}
+                    <div class="error">{{ form.username.errors }}</div>
+                {% endif %}
+
+                <input type="password" id="Password" name="password1" placeholder="Пароль" required
+                       value="{{ form.password1.value|default_if_none:'' }}">
+                {% if form.password1.errors %}
+                    <div class="error">{{ form.password1.errors }}</div>
+                {% endif %}
+
+                <input type="password" id="Password2" name="password2" placeholder="Подтверждение пароля" required
+                       value="{{ form.password2.value|default_if_none:'' }}">
+                {% if form.password2.errors %}
+                    <div class="error">{{ form.password2.errors }}</div>
+                {% endif %}
+
+                <button type="submit" id="ActBtn">Зарегистрироваться</button>
+            </form>
+
+            <a id="Back" href="{% url 'login' %}">Назад</a>
+        </div>
+    </div>
+    <!-- Если JS больше не нужен для отправки формы, можете убрать ссылку -->
+    <script src="{% static 'js/RegisterScript.js' %}" defer></script>
+</body>
+</html>
