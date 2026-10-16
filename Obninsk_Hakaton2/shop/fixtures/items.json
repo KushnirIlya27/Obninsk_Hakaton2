@@ -3,54 +3,135 @@
     "model": "shop.item",
     "pk": 1,
     "fields": {
-      "name": "Курс по программированию",
-      "price": 50,
-      "description": "описание"
+      "name": "Практика в Сбере — Python-разработчик",
+      "price": 500,
+      "description": "3 месяца практики в команде Сбера. Реальные задачи, наставник, возможность оффера."
     }
   },
   {
     "model": "shop.item",
     "pk": 2,
     "fields": {
-      "name": "Поездка на 67 хакатон",
-      "price": 150,
-      "description": "описание"
+      "name": "Стажировка в Яндексе — Backend",
+      "price": 750,
+      "description": "Стажировка в департаменте поиска. Python/Go, высокие нагрузки, крутая команда."
     }
   },
   {
     "model": "shop.item",
     "pk": 3,
     "fields": {
-      "name": "Практика T-BANK",
-      "price": 200,
-      "description": "описание"
+      "name": "Практика в VK — ML-инженер",
+      "price": 800,
+      "description": "Работа с рекомендательными системами ВКонтакте. PyTorch, CatBoost, анализ данных."
     }
   },
   {
     "model": "shop.item",
     "pk": 4,
     "fields": {
-      "name": "Курс в Сбер",
-      "price": 50,
-      "description": "описание"
+      "name": "Интенсив Тинькофф — Java-разработка",
+      "price": 600,
+      "description": "Двухнедельный интенсив от Тинькофф. Spring Boot, микросервисы, финальный проект."
     }
   },
   {
     "model": "shop.item",
     "pk": 5,
     "fields": {
-      "name": "Курс английского до уровня C1",
-      "price": 50,
-      "description": "описание"
+      "name": "Курс Ozon — Golang для бэкенда",
+      "price": 450,
+      "description": "Основы Go, горутины, каналы, REST API. Практика на реальных задачах Ozon."
     }
   },
   {
     "model": "shop.item",
     "pk": 6,
     "fields": {
-      "name": "Курс по матанализу",
-      "price": 50,
-      "description": "описание"
+      "name": "Практика в Авито — Frontend (React)",
+      "price": 550,
+      "description": "Разработка интерфейсов Авито. React, TypeScript, работа с дизайн-системой."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 7,
+    "fields": {
+      "name": "Стажировка в Kaspersky — Кибербезопасность",
+      "price": 900,
+      "description": "Анализ угроз, реверс-инжиниринг, работа с реальными инцидентами."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 8,
+    "fields": {
+      "name": "Интенсив от Сколтеха — Data Science",
+      "price": 700,
+      "description": "Машинное обучение, статистика, нейросети. Проектная работа с ментором."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 9,
+    "fields": {
+      "name": "Практика в Ростелекоме — DevOps",
+      "price": 500,
+      "description": "Docker, Kubernetes, CI/CD. Автоматизация развёртывания сервисов."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 10,
+    "fields": {
+      "name": "Курс от МТС — Мобильная разработка (Kotlin)",
+      "price": 650,
+      "description": "Android-разработка на Kotlin. Работа с API, архитектура MVVM."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 11,
+    "fields": {
+      "name": "Стажировка в Wildberries — Аналитик данных",
+      "price": 550,
+      "description": "SQL, Python, дашборды. Анализ продаж и поведения пользователей."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 12,
+    "fields": {
+      "name": "Практика в Газпромбанке — 1С-разработчик",
+      "price": 400,
+      "description": "Автоматизация банковских процессов на 1С. Встроенный язык, отчёты."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 13,
+    "fields": {
+      "name": "Интенсив от Нетологии — Тестирование (QA)",
+      "price": 350,
+      "description": "Ручное и автоматизированное тестирование. Postman, Selenium, баг-репорты."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 14,
+    "fields": {
+      "name": "Курс от Skillbox — UX/UI-дизайн",
+      "price": 600,
+      "description": "Figma, прототипирование, дизайн-системы. Финальный проект — портфолио."
+    }
+  },
+  {
+    "model": "shop.item",
+    "pk": 15,
+    "fields": {
+      "name": "Практика в Лаборатории Касперского — Reverse Engineering",
+      "price": 950,
+      "description": "Глубокий разбор бинарников, IDA Pro, отладка. Только для самых настойчивых."
     }
   }
 ]
