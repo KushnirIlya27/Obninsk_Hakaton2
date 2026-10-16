@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Магазин</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/shop.css' %}">
+</head>
+<body>
+    <h1>🛒Магазин за коины🛒</h1>
+
+    <ul class="items">
+        {% for item in items %}
+            <li class="item">
+                <a href="{% url 'shop:item_detail' item.id %}">{{ item.name }}</a>
+                — {{ item.price }} коинов
+            </li>
+        {% empty %}
+            <li>Товаров пока нет</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
