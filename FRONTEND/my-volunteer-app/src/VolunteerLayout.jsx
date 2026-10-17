@@ -1,3 +1,4 @@
+import BrandLogo from "./components/BrandLogo";
 import { useState } from "react";
 import { useAuth } from "./auth/useAuth";
 import { Notice } from "./components/ui";
@@ -48,11 +49,7 @@ const VolunteerLayout = () => {
           <div className="flex items-center gap-3">
             {/* Вставляем нашу картинку */}
             <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
-              <img
-                src="/logo.png"
-                alt="Логотип Обнинска"
-                className="w-full h-full object-cover"
-              />
+              <BrandLogo />
             </div>
             {/* Текст рядом */}
             <div className="hidden sm:flex flex-col">

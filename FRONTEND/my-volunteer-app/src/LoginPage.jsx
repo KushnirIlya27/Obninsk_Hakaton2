@@ -1,3 +1,4 @@
+import BrandLogo from "./components/BrandLogo";
 import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/useAuth";
@@ -42,11 +43,7 @@ const LoginPage = () => {
       <div className="w-full md:w-1/2 bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
-            <img
-              src="/logo.png"
-              alt="Логотип"
-              className="w-full h-full object-cover"
-            />
+            <BrandLogo />
           </div>
           <div className="flex flex-col">
             <span className="text-xs uppercase tracking-wider text-blue-200">

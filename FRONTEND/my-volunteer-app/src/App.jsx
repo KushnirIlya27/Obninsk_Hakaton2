@@ -9,11 +9,13 @@ import VolunteerRewards from "./VolunteerRewards";
 import VolunteerProfile from "./VolunteerProfile";
 import CoordinatorDashboard from "./CoordinatorDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ThemeToggle from "./components/ThemeToggle";
 import AuthProvider from "./auth/AuthProvider";
 
 export default function App() {
   return (
     <AuthProvider>
+      <div className="app-shell">
       <Routes>
         <Route path="/" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -41,6 +43,8 @@ export default function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      <ThemeToggle />
+      </div>
     </AuthProvider>
   );
 }

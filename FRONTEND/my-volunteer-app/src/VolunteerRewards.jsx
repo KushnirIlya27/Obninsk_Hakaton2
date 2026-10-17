@@ -32,7 +32,7 @@ function PurchaseDialog({ reward, balance, busy, error, onClose, onConfirm }) {
       </p>
       <Notice>{error}</Notice>
       <p className="text-sm text-slate-500 mb-6">
-        Это учебное поощрение. Запрос на условную выдачу увидит координатор.
+        Запрос на выдачу увидит координатор. До выдачи обмен можно отменить с возвратом койнов.
       </p>
       <div className="flex justify-end gap-3">
         <button className="secondary-button" disabled={busy} onClick={onClose}>
@@ -114,7 +114,7 @@ export default function VolunteerRewards() {
             становятся подарками
           </h1>
           <p className="text-blue-100">
-            Обменивайте подтверждённые часы на учебные поощрения.
+            Получайте поощрения за подтверждённые добрые дела.
           </p>
         </div>
         <div className="rounded-2xl bg-white/10 border border-white/20 p-6 min-w-56">

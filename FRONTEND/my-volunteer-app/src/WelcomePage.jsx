@@ -1,3 +1,5 @@
+import FaqHelp from "./components/FaqHelp";
+import BrandLogo from "./components/BrandLogo";
 import { useResource } from "./lib/useResource";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
@@ -10,22 +12,7 @@ const WelcomePage = () => {
       <div className="w-full md:w-1/2 bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
         {/* Верхний блок с логотипом */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-            {/* Иконка листа */}
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-              />
-            </svg>
-          </div>
+          <BrandLogo />
           <div className="flex flex-col">
             <span className="text-xs uppercase tracking-wider text-blue-200">
               Цифровой волонтер
@@ -111,7 +98,7 @@ const WelcomePage = () => {
               Как вы хотите войти?
             </h3>
             <p className="text-slate-500 text-sm">
-              Выберите роль для демонстрации полного сценария.
+              Выберите свою роль, чтобы начать.
             </p>
           </div>
 
@@ -206,37 +193,10 @@ const WelcomePage = () => {
             </button>
           </div>
 
-          {/* Блок Демо-режим */}
-          <div className="flex gap-3 p-4 bg-slate-100 rounded-xl text-slate-500">
-            <svg
-              className="w-5 h-5 flex-shrink-0 mt-0.5 text-slate-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-              />
-            </svg>
-            <div>
-              <div className="text-sm font-semibold text-slate-700">
-                Демо-режим
-              </div>
-              <div className="text-xs mt-1 leading-relaxed">
-                Все данные учебные. Реальные персональные данные не
-                используются.
-              </div>
-            </div>
-          </div>
+
         </div>
 
-        {/* Плавающая кнопка помощи (внизу справа) */}
-        <button className="absolute bottom-6 right-6 w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors">
-          <span className="font-bold text-lg">?</span>
-        </button>
+        <FaqHelp />
       </div>
     </div>
   );

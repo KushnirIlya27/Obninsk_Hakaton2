@@ -1,10 +1,11 @@
+import BrandLogo from "./components/BrandLogo";
 import { Link } from "react-router-dom";
 export default function CoordinatorPage() {
   return (
     <div className="min-h-screen grid md:grid-cols-2 font-sans">
       <section className="bg-[#14346b] text-white p-10 md:p-16 flex flex-col justify-between">
         <Link to="/" className="font-bold flex items-center gap-3">
-          <img src="/logo.png" alt="" className="w-10 h-10 rounded-xl" />
+          <BrandLogo />
           Цифровой волонтёр Обнинска
         </Link>
         <div className="py-20">

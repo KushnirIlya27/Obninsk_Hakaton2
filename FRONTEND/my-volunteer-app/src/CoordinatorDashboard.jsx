@@ -1,3 +1,4 @@
+import BrandLogo from "./components/BrandLogo";
 import { formatDate } from "./lib/format";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -339,7 +340,7 @@ export default function CoordinatorDashboard() {
     setError("");
     try {
       await api(`coordinator/redemptions/${id}/issue/`, {});
-      saved(`Запрос №${id}: условная выдача отмечена.`);
+      saved(`Запрос №${id}: выдача отмечена.`);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -354,7 +355,7 @@ export default function CoordinatorDashboard() {
             to="/coordinator-dashboard"
             className="flex items-center gap-3 font-bold"
           >
-            <img src="/logo.png" alt="" className="w-10 h-10 rounded-xl" />
+            <BrandLogo />
             <span>Обнинск · Координатор</span>
           </Link>
           <div className="flex flex-wrap items-center gap-4 text-sm">
@@ -550,8 +551,7 @@ export default function CoordinatorDashboard() {
         )}
       </main>
       <footer className="page-shell text-xs text-slate-500">
-        Учебная система. Койны не являются деньгами; выдача поощрений
-        демонстрационная.
+        Цифровой волонтёр Обнинска · Добрые дела объединяют город
       </footer>
     </div>
   );

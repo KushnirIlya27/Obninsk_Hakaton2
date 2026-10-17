@@ -1,3 +1,4 @@
+import BrandLogo from "./components/BrandLogo";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "./auth/useAuth";
@@ -62,21 +63,7 @@ const VolunteerPage = () => {
       <div className="w-full md:w-[45%] bg-[#14346b] text-white p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
         {/* Логотип */}
         <div className="flex items-center gap-3 relative z-10">
-          <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-              />
-            </svg>
-          </div>
+          <BrandLogo />
           <div className="flex flex-col">
             <span className="text-xs uppercase tracking-wider text-blue-200">
               Цифровой волонтер
@@ -117,31 +104,6 @@ const VolunteerPage = () => {
             Участвуй в событиях, собирай добрые часы и обменивай их на городские
             поощрения.
           </p>
-        </div>
-
-        {/* Футер */}
-        <div className="relative z-10 flex items-start gap-3 text-blue-200">
-          <svg
-            className="w-5 h-5 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-            />
-          </svg>
-          <div>
-            <div className="text-sm font-semibold text-white">
-              Безопасный демо-режим
-            </div>
-            <div className="text-xs mt-1">
-              Данные формы используются только внутри прототипа
-            </div>
-          </div>
         </div>
 
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-500 rounded-full opacity-10 blur-3xl"></div>
@@ -386,8 +348,7 @@ const VolunteerPage = () => {
                 >
                   {" "}
                   {/* Для VolunteerPage замени на htmlFor="terms-vol" */}Я
-                  согласен с правилами сервиса и обработкой учебных данных в
-                  рамках демонстрации
+                  согласен с правилами сервиса и обработкой персональных данных
                 </label>
                 {errors.terms && (
                   <p className="text-red-500 text-xs mt-1">{errors.terms}</p>

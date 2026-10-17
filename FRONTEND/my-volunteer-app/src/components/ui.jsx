@@ -47,7 +47,7 @@ const statusNames = {
   pending: "На проверке",
   approved: "Подтверждено",
   rejected: "Отклонено",
-  issued: "Условно выдано",
+  issued: "Выдано",
   cancelled: "Отменено, койны возвращены",
 };
 export function Status({ status }) {
