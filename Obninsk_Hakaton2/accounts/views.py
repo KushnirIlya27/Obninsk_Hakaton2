@@ -1,14 +1,12 @@
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LoginView
-from django.db import transaction
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .forms import CustomUserCreationForm
-from .models import VolunteerProfile
+from .models import Person   # ← было VolunteerProfile (или вообще не было импорта)
 
 
 class CustomLoginView(LoginView):
@@ -40,7 +38,7 @@ def register(request):
 
 @login_required(login_url='login')
 def profile(request):
-    card, _ = VolunteerProfile.objects.get_or_create(user=request.user)
+    card, _ = Person.objects.get_or_create(user=request.user)   # ← было VolunteerProfile
     return render(request, 'registration/profile.html', {'card': card})
 
 

@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 
-from accounts.models import VolunteerProfile
+from django.apps import apps
 from django.contrib.auth import authenticate, login, logout
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
 from django.http import JsonResponse
@@ -141,14 +141,17 @@ def rewards(request):
 
 @endpoint(["GET"])
 def me(request):
-    profile = VolunteerProfile.objects.filter(user=request.user).first()
+    # Ленивый импорт: accounts.Person подгружается уже после django.setup(),
+    # поэтому ImportError и circular import исключены.
+    Person = apps.get_model("accounts", "Person")
+    person = Person.objects.filter(user=request.user).first()
     return JsonResponse(
         {
             "id": request.user.pk,
             "username": request.user.username,
             "name": request.user.get_full_name(),
-            "balance": profile.balance if profile else 0,
-            "confirmed_hours": profile.confirmed_hours if profile else "0.0",
+            "balance": person.tokens if person else 0,
+            "confirmed_hours": person.hours if person else "0.0",
             "can_review": request.user.is_staff
             and request.user.has_perm("catalog.review_activity"),
         }

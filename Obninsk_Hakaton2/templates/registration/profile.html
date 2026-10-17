@@ -1,13 +1,37 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Карточка волонтёра</title>
-<style>body{margin:0;background:#01001c;color:#e8edf7;font:18px system-ui}main{max-width:650px;margin:10vh auto;padding:32px;background:#0e162c;border:1px solid #00c0fe;border-radius:16px}a{color:#00c0fe}button{padding:10px 18px;cursor:pointer}li{margin:14px 0}</style></head>
-<body><main>
-<h1>Карточка волонтёра</h1><p>Вы вошли как <strong>{{ request.user.username }}</strong>.</p>
-<p>Подтверждено часов: <strong>{{ card.confirmed_hours }}</strong></p>
-<p>Баланс: <strong>{{ card.balance }} койнов</strong></p>
-<p>Это страница проверки общей регистрации и учёта. После подтверждения координатором обновите страницу.</p>
-<ul><li><a href="/api/events/">Каталог мероприятий (API)</a></li><li><a href="/api/me/activities/">Мои заявки (API)</a></li><li><a href="/api/me/transactions/">История операций (API)</a></li></ul>
-{% if request.user.is_staff %}<p><a href="{% url 'admin:index' %}">Панель координатора</a></p>{% endif %}
-<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Выйти</button></form>
-<p><small>Учебная система. Койны не являются деньгами.</small></p>
-</main></body></html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Карточка волонтёра</title>
+    <style>
+        body{margin:0;background:#01001c;color:#e8edf7;font:18px system-ui}
+        main{max-width:650px;margin:10vh auto;padding:32px;background:#0e162c;border:1px solid #00c0fe;border-radius:16px}
+        a{color:#00c0fe}
+        button{padding:10px 18px;cursor:pointer}
+        li{margin:14px 0}
+    </style>
+</head>
+<body>
+<main>
+    <h1>Карточка волонтёра</h1>
+    <p>Вы вошли как <strong>{{ request.user.username }}</strong>.</p>
+    <p>Подтверждено часов: <strong>{{ card.hours }}</strong></p>
+    <p>Баланс: <strong>{{ card.tokens }} токенов</strong></p>
+    <p>Это страница проверки общей регистрации и учёта. После подтверждения координатором обновите страницу.</p>
+    <ul>
+        <li><a href="/api/events/">Каталог мероприятий (API)</a></li>
+        <li><a href="/api/me/activities/">Мои заявки (API)</a></li>
+        <li><a href="/api/me/transactions/">История операций (API)</a></li>
+    </ul>
+    {% if request.user.is_staff %}
+        <p><a href="{% url 'admin:index' %}">Панель координатора</a></p>
+    {% endif %}
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Выйти</button>
+    </form>
+    <p><small>Учебная система. Токены не являются деньгами.</small></p>
+</main>
+</body>
+</html>

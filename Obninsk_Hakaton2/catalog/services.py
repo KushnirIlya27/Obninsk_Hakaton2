@@ -3,7 +3,7 @@
 from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
-from accounts.models import VolunteerProfile
+from accounts.models import Person
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 from django.db.models import F
@@ -50,7 +50,7 @@ def apply_to_event(*, volunteer, event_id):
     if not event.is_active:
         raise Conflict("Запись на мероприятие закрыта.")
     activity, created = Activity.objects.get_or_create(volunteer=volunteer, event=event)
-    VolunteerProfile.objects.get_or_create(user=volunteer)
+    Person.objects.get_or_create(user=volunteer)          # было VolunteerProfile
     return activity, created
 
 
@@ -96,12 +96,10 @@ def review_activity(*, coordinator, activity_id, decision, hours=None, note=""):
         raise Conflict("Заявка уже рассмотрена.")
     if confirmed is not None:
         coins = int(confirmed * COINS_PER_HOUR)
-        profile, _ = VolunteerProfile.objects.get_or_create(
-            user_id=activity.volunteer_id
-        )
-        VolunteerProfile.objects.filter(pk=profile.pk).update(
-            balance=F("balance") + coins,
-            confirmed_hours=F("confirmed_hours") + confirmed,
+        person, _ = Person.objects.get_or_create(user_id=activity.volunteer_id)
+        Person.objects.filter(pk=person.pk).update(
+            tokens=F("tokens") + coins,
+            hours=F("hours") + confirmed,
         )
         CoinTransaction.objects.create(
             volunteer_id=activity.volunteer_id,
@@ -122,8 +120,8 @@ def purchase_reward(*, volunteer, reward_id, request_key):
         raise ValidationError(
             "request_key должен быть UUID; повтор запроса использует тот же ключ."
         )
-    profile, _ = VolunteerProfile.objects.get_or_create(user=volunteer)
-    profile = VolunteerProfile.objects.select_for_update().get(pk=profile.pk)
+    person, _ = Person.objects.get_or_create(user=volunteer)
+    person = Person.objects.select_for_update().get(pk=person.pk)
     previous = Redemption.objects.filter(volunteer=volunteer, request_key=key).first()
     if previous:
         if previous.reward_id != reward_id:
@@ -133,9 +131,9 @@ def purchase_reward(*, volunteer, reward_id, request_key):
     if not reward.is_active:
         raise Conflict("Поощрение недоступно.")
     if (
-        VolunteerProfile.objects.filter(
-            pk=profile.pk, balance__gte=reward.price
-        ).update(balance=F("balance") - reward.price)
+        Person.objects.filter(
+            pk=person.pk, tokens__gte=reward.price
+        ).update(tokens=F("tokens") - reward.price)
         != 1
     ):
         raise Conflict("Недостаточно койнов.")
