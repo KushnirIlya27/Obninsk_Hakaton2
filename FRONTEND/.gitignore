@@ -218,3 +218,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Track frontend source modules
+!/my-volunteer-app/src/lib/
+!/my-volunteer-app/src/lib/**
