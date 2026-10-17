@@ -218,3 +218,23 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# File-backed concurrency test database
+test_concurrency.sqlite3*
+
+# Frontend dependencies and test output
+node_modules/
+dist/
+playwright-report/
+test-results/
+*.zip
+*.patch
+
+# Local data and editor files
+*.sqlite3
+*.sqlite3-*
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.log

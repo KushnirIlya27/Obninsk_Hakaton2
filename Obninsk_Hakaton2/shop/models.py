@@ -4,6 +4,7 @@ from django.db import models
 
 class Item(models.Model):
     """Товар в магазине."""
+
     name = models.CharField("Название", max_length=100)
     price = models.PositiveIntegerField("Цена в коинах")
     description = models.TextField("Описание", blank=True)
@@ -19,12 +20,13 @@ class Item(models.Model):
 
 class Profile(models.Model):
     """Профиль пользователя с балансом коинов."""
+
     user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="profile",
     )
-    coins = models.PositiveIntegerField("Коины", default=100)
+    coins = models.PositiveIntegerField("Коины", default=0)
 
     class Meta:
         verbose_name = "Профиль"
@@ -36,6 +38,7 @@ class Profile(models.Model):
 
 class Purchase(models.Model):
     """История покупок: кто, что и когда купил."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

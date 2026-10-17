@@ -12,14 +12,20 @@ Class-based views
     2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
+from django.views.generic import RedirectView
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView   # ← добавить импорт
+from django.urls import include, path
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    path(
+        "", RedirectView.as_view(pattern_name="profile", permanent=False), name="home"
+    ),
+    path("accounts/", include("accounts.urls")),
     path("admin/", admin.site.urls),
-    path("accounts/", include("django.contrib.auth.urls")),
+    path("api/", include("catalog.urls")),
     path("shop/", include("shop.urls")),
 ]
