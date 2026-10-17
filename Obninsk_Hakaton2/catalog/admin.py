@@ -6,8 +6,8 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .forms import ReviewForm
-from .models import Activity, CoinTransaction, Event, Redemption, Reward
-from .services import issue_reward, require_coordinator, review_activity
+from .models import Activity, CoinTransaction, Event, EventTemplate, Redemption, Reward
+from .services import cancel_reward, issue_reward, require_coordinator, review_activity
 
 admin.site.site_header = "Цифровой волонтёр Обнинска"
 admin.site.site_title = "Панель координатора"
@@ -27,7 +27,14 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ["title", "starts_at", "location", "is_active"]
+    list_display = [
+        "title",
+        "starts_at",
+        "ends_at",
+        "location",
+        "coins_per_hour",
+        "is_active",
+    ]
     search_fields = ["title", "location"]
     list_filter = ["is_active", "starts_at"]
 
@@ -47,6 +54,9 @@ class ActivityAdmin(ReadOnlyAdmin):
         "event",
         "requested_hours",
         "confirmed_hours",
+        "rate_snapshot",
+        "multiplier",
+        "coins_awarded",
         "status",
         "reviewed_by",
         "review_link",
@@ -66,10 +76,15 @@ class ActivityAdmin(ReadOnlyAdmin):
         "reviewed_at",
         "review_note",
         "created_at",
+        "rate_snapshot",
+        "multiplier",
+        "coins_awarded",
+        "report_text",
+        "report_submitted_at",
     ]
 
     def has_add_permission(self, request):
-        return request.user.has_perm("catalog.add_activity")
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -78,6 +93,8 @@ class ActivityAdmin(ReadOnlyAdmin):
 
     @admin.display(description="Проверка")
     def review_link(self, obj):
+        if obj.status == Activity.Status.REGISTERED:
+            return "Ждём отчёт волонтёра"
         if obj.status != Activity.Status.PENDING:
             return "Рассмотрена"
         return format_html(
@@ -103,7 +120,7 @@ class ActivityAdmin(ReadOnlyAdmin):
             raise PermissionDenied
         form = ReviewForm(
             request.POST if request.method == "POST" else None,
-            initial={"hours": obj.requested_hours},
+            initial={"hours": obj.requested_hours, "multiplier": "1.00"},
         )
         if request.method == "POST" and form.is_valid():
             try:
@@ -116,7 +133,7 @@ class ActivityAdmin(ReadOnlyAdmin):
                 self.log_change(
                     request,
                     result,
-                    f"{result.get_status_display()}; часы: {result.confirmed_hours}; {result.review_note}",
+                    f"{result.get_status_display()}; часы: {result.confirmed_hours}; коэффициент: {result.multiplier}; начислено: {result.coins_awarded}; {result.review_note}",
                 )
                 self.message_user(
                     request,
@@ -135,7 +152,9 @@ class ActivityAdmin(ReadOnlyAdmin):
                 "original": obj,
                 "title": f"Проверка заявки №{obj.pk}",
                 "form": form,
-                "already_reviewed": obj.status != Activity.Status.PENDING,
+                "already_reviewed": obj.status
+                in (Activity.Status.APPROVED, Activity.Status.REJECTED),
+                "awaiting_report": obj.status == Activity.Status.REGISTERED,
             },
         )
 
@@ -162,7 +181,7 @@ class RedemptionAdmin(ReadOnlyAdmin):
     list_filter = ["status", "reward"]
     search_fields = ["volunteer__username", "reward__title"]
     list_select_related = ["volunteer", "reward", "issued_by"]
-    actions = ["mark_issued"]
+    actions = ["mark_issued", "cancel_with_refund"]
 
     def has_fulfill_permission(self, request):
         return request.user.has_perm("catalog.fulfill_redemption")
@@ -185,3 +204,21 @@ class RedemptionAdmin(ReadOnlyAdmin):
                 self.message_user(
                     request, f"Запрос №{obj.pk}: условно выдано.", messages.SUCCESS
                 )
+
+
+    @admin.action(description="Отменить запрос и вернуть койны", permissions=["fulfill"])
+    def cancel_with_refund(self, request, queryset):
+        for obj in queryset:
+            try:
+                result = cancel_reward(user=request.user, redemption_id=obj.pk)
+                self.log_change(request, result, "Отмена с возвратом койнов")
+                self.message_user(request, f"Запрос №{obj.pk}: отменён, койны возвращены.", messages.SUCCESS)
+            except ValidationError as exc:
+                self.message_user(request, "; ".join(exc.messages), messages.WARNING)
+
+
+@admin.register(EventTemplate)
+class EventTemplateAdmin(admin.ModelAdmin):
+    list_display = ["title", "location", "coins_per_hour", "is_active"]
+    list_filter = ["is_active"]
+    search_fields = ["title", "location"]

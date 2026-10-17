@@ -44,9 +44,9 @@ class Person(models.Model):
     )
     hours = models.IntegerField(default=0)
     tokens = models.IntegerField(default=0)
-    phone = models.CharField(null=True, blank=True, default=None)
+    phone = models.CharField(max_length=32, null=True, blank=True, default=None)
     email = models.EmailField(null=True, blank=True, default=None)
-    info = models.CharField(null=True, blank=True, default=None)
+    info = models.TextField(blank=True, default="", max_length=2000)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username

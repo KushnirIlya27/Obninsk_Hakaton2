@@ -1,13 +1,17 @@
-<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Карточка волонтёра</title>
-<style>body{margin:0;background:#01001c;color:#e8edf7;font:18px system-ui}main{max-width:650px;margin:10vh auto;padding:32px;background:#0e162c;border:1px solid #00c0fe;border-radius:16px}a{color:#00c0fe}button{padding:10px 18px;cursor:pointer}li{margin:14px 0}</style></head>
-<body><main>
-<h1>Карточка волонтёра</h1><p>Вы вошли как <strong>{{ request.user.username }}</strong>.</p>
-<p>Подтверждено часов: <strong>{{ card.confirmed_hours }}</strong></p>
-<p>Баланс: <strong>{{ card.balance }} койнов</strong></p>
-<p>Это страница проверки общей регистрации и учёта. После подтверждения координатором обновите страницу.</p>
-<ul><li><a href="/api/events/">Каталог мероприятий (API)</a></li><li><a href="/api/me/activities/">Мои заявки (API)</a></li><li><a href="/api/me/transactions/">История операций (API)</a></li></ul>
-{% if request.user.is_staff %}<p><a href="{% url 'admin:index' %}">Панель координатора</a></p>{% endif %}
-<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Выйти</button></form>
-<p><small>Учебная система. Койны не являются деньгами.</small></p>
-</main></body></html>
+{% extends 'volunteers/base.html' %}
+{% block title %}Мероприятия и мои добрые дела{% endblock %}
+{% block content %}
+<section class="intro"><div><p class="eyebrow">Личный кабинет волонтёра</p><h1>Выбирайте доброе дело</h1><p class="muted">Запишитесь на мероприятие, отправьте отчёт после участия и получите койны за подтверждённые часы.</p></div><div class="balance"><strong>{{ card.balance }}</strong><span>койнов на балансе</span><small>{{ card.confirmed_hours }} подтверждённых часов</small></div></section>
+<h2>Мероприятия</h2><div class="grid">
+{% for row in events %}<article class="card"><div class="tag">{{ row.event.coins_per_hour }} койнов / час</div><h3>{{ row.event.title }}</h3><p class="muted">{{ row.event.location }}</p><p>{{ row.event.starts_at|date:'d.m.Y H:i' }}{% if row.event.ends_at %} — {{ row.event.ends_at|date:'d.m.Y H:i' }}{% endif %}</p><p>{{ row.event.description|truncatewords:24 }}</p>{% if row.activity %}<p class="muted">{{ row.activity.get_status_display }} · ваша ставка {{ row.activity.rate_snapshot }} койнов/ч</p>{% endif %}<a class="button" href="{% url 'event_detail' row.event.pk %}">{% if row.activity %}Моё участие{% else %}Подробнее и записаться{% endif %}</a></article>{% empty %}<p class="muted">Пока нет открытых мероприятий. Координатор скоро добавит новые.</p>{% endfor %}
+</div>
+<section><h2>Мои участия и отчёты</h2><div class="stack">
+{% for activity in activities %}<article class="card"><div class="row"><h3><a href="{% url 'event_detail' activity.event_id %}">{{ activity.event.title }}</a></h3><span class="tag">{{ activity.get_status_display }}</span></div><p>Ставка при записи: <strong>{{ activity.rate_snapshot }} койнов/час</strong></p>
+{% if activity.status == 'approved' %}<p class="success-text">{{ activity.confirmed_hours }} ч. × {{ activity.rate_snapshot }} × {{ activity.multiplier }} = <strong>+{{ activity.coins_awarded }} койнов</strong></p>{% if activity.review_note %}<p>Комментарий: {{ activity.review_note }}</p>{% endif %}
+{% elif activity.status == 'rejected' %}<p>Причина отказа: {{ activity.review_note }}</p>
+{% elif activity.status == 'pending' %}<p>Заявлено {{ activity.requested_hours }} ч. Отчёт на проверке; баланс пока не изменён.</p>
+{% elif activity.can_submit_report %}<a class="button" href="{% url 'activity_report' activity.pk %}">Подать отчёт на получение койнов</a>
+{% else %}<p class="muted">Форма отчёта откроется {{ activity.event.report_available_at|date:'d.m.Y H:i' }}.</p>{% endif %}</article>{% empty %}<p class="muted">Вы пока не записались на мероприятия.</p>{% endfor %}
+</div></section>
+<section><h2>Последние операции</h2>{% for entry in history %}<div class="ledger"><strong>{% if entry.amount > 0 %}+{% endif %}{{ entry.amount }}</strong><span>{{ entry.description }}<small>{{ entry.created_at|date:'d.m.Y H:i' }}</small></span></div>{% empty %}<p class="muted">Здесь появится прозрачная история начислений и списаний.</p>{% endfor %}</section>
+{% endblock %}

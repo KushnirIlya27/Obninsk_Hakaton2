@@ -1,115 +1,111 @@
-# API для фронтенда
+# API общего приложения
 
-Базовый путь `/api/`. Все адреса заканчиваются `/`. Тела POST — JSON. Авторизация — Django session cookie. Для запросов, меняющих данные, обязателен CSRF. Используйте тот же origin, что и backend, либо dev-proxy для `/api/`; CORS для отдельного домена в этом MVP не настроен.
+Базовый путь `/api/`, JSON, адреса заканчиваются `/`. React использует `src/lib/api.js`. В разработке все запросы идут на origin Vite `http://127.0.0.1:5173` и проксируются в Django. В браузере сохраняется сессионная cookie, а не пароль.
 
 ## Авторизация
 
-1. `GET /api/auth/csrf/` устанавливает CSRF-cookie и возвращает `csrfToken`.
-2. `POST /api/auth/login/` с `{ "username": "volunteer", "password": "Demo-Obninsk-2026!" }` и заголовком `X-CSRFToken`.
-3. Сохранить новый `csrfToken` из ответа входа: Django меняет токен при логине.
-4. Дальнейшие POST отправлять с cookie и новым `X-CSRFToken`.
-5. `POST /api/auth/logout/` завершает сессию.
+1. `GET auth/csrf/` устанавливает CSRF-cookie и возвращает `csrfToken`.
+2. Для POST нужен `X-CSRFToken` и cookie сессии.
+3. После входа или регистрации токен меняется. Общий API-клиент читает актуальную CSRF-cookie.
+4. Если Django отклонил запрос до вызова view с `code: csrf_failed`, клиент обновляет токен и повторяет запрос один раз. Остальные ошибки и сетевые сбои автоматически не повторяются.
+5. Права возвращает `GET me/`; выбор роли в интерфейсе разрешений не назначает.
 
-Пример клиента (в браузере на том же origin):
-
-```javascript
-let csrfToken;
-async function api(path, body) {
-  const response = await fetch(`/api/${path}`, {
-    method: body === undefined ? 'GET' : 'POST',
-    credentials: 'same-origin',
-    headers: body === undefined ? {} : {
-      'Content-Type': 'application/json',
-      'X-CSRFToken': csrfToken,
-    },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-  const text = await response.text();
-  let data;
-  try { data = JSON.parse(text); } catch { data = { error: text }; }
-  if (!response.ok) throw new Error(`${response.status}: ${data.error || text}`);
-  return data;
-}
-async function signIn(username) {
-  csrfToken = (await api('auth/csrf/')).csrfToken;
-  const result = await api('auth/login/', {
-    username, password: 'Demo-Obninsk-2026!',
-  });
-  csrfToken = result.csrfToken;
-  return result;
-}
-```
-
-## Контракт
-
-| Метод и путь после `/api/` | Доступ | Тело / назначение |
+| Метод | Путь | Тело / ответ |
 |---|---|---|
-| `GET events/` | Все | Доступные мероприятия |
-| `GET rewards/` | Все | Активные поощрения и цены |
-| `GET me/` | Вход | Имя, баланс, подтверждённые часы |
-| `POST events/{id}/apply/` | Вход | `{}`; заявка текущего пользователя |
-| `GET me/activities/` | Вход | Собственные заявки и решения |
-| `POST activities/{id}/hours/` | Владелец заявки | `{ "hours": "3.0" }`; заявить часы без начисления |
-| `GET me/transactions/` | Вход | Своя история начислений и списаний |
-| `POST rewards/{id}/purchase/` | Вход | `{ "request_key": "UUID" }` |
-| `GET me/redemptions/` | Вход | Свои запросы на поощрения |
-| `GET coordinator/activities/?status=pending` | Координатор с правом проверки | Список заявок; фильтр статуса необязателен |
-| `POST coordinator/activities/{id}/review/` | Координатор с правом проверки | `{ "decision": "approved", "hours": "3.0", "note": "Участие проверено" }` |
-| `POST coordinator/activities/{id}/review/` | Координатор с правом проверки | `{ "decision": "rejected", "note": "Причина отказа" }` |
-| `GET coordinator/redemptions/` | Координатор с правом выдачи | Все запросы на поощрения |
-| `POST coordinator/redemptions/{id}/issue/` | Координатор с правом выдачи | `{}`; отметить условную выдачу |
+| GET | `auth/csrf/` | `{ csrfToken }` |
+| POST | `auth/register/` | `username`, `password1`, `password2`, необязательные `email`, `phone`, `info` |
+| POST | `auth/login/` | `username`, `password` |
+| POST | `auth/logout/` | `{}` |
+| GET | `me/` | `id`, `username`, `name`, `email`, `phone`, `info`, `balance`, `confirmed_hours`, `is_staff`, `can_review`, `can_issue`, `can_manage_events` |
+| GET | `stats/` | `volunteers`, `confirmed_hours`, `events`; публичная агрегированная статистика |
 
-Списки возвращаются как `{ "results": [...] }`. В этом небольшом MVP пагинации нет. Decimal-часы в ответе — строки. Койны и цена — целые числа. Дата/время — ISO 8601, в БД используется UTC, в админке — московское время.
+Регистрация принимает также старое поле `password` вместо пары паролей. Все пароли проходят Django-валидацию. Логин проверяется на занятость, контакты — на формат. Переданный `role` / `is_staff` не даёт прав. Ошибки формы: `{ error, fields: { username: [{message, code}], ... } }`. Успех регистрации — 201, автоматический вход и `redirect_url: "/dashboard"`.
 
-Для подтверждения обязательно передавать фактические `hours`; заявленные часы могут отличаться. Для отклонения обязателен непустой комментарий. Дробные часы допустимы с шагом 0.1, до 24 часов на заявку. Изменение часов после решения запрещено.
+## Мероприятия и отчёты
 
-Заявка повторно возвращается с тем же ID. При покупке генерируйте ключ через `crypto.randomUUID()` **один раз на намерение купить** и сохраняйте его для сетевых повторов. Новый ключ означает новую покупку. Повтор с тем же ключом возвращает прежний запрос без списания, даже если цена уже изменилась. Один ключ нельзя использовать для другого поощрения.
+| Метод | Путь | Назначение |
+|---|---|---|
+| GET | `events/` | Активные события и участие текущего пользователя |
+| POST | `events/{id}/apply/` | Записаться; тело `{}` |
+| GET | `me/activities/` | Свои участия и отчёты |
+| POST | `activities/{id}/report/` | `{ hours: "3.0", report_text: "Что делал" }` |
+| POST | `activities/{id}/hours/` | Старый совместимый метод; описание необязательно |
+| GET | `coordinator/activities/?status=pending` | Отчёты координатору; фильтр необязателен |
+| POST | `coordinator/activities/{id}/review/` | Решение координатора |
+| GET | `coordinator/events/` | Все события для организатора с правом `view_event` |
+| POST | `coordinator/events/` | Создать событие; нужно `add_event` |
 
-## Полный сценарий HTTP
+Событие: `id`, `title`, `description`, `location`, `starts_at`, `ends_at`, `coins_per_hour`, `rate`, `is_active`, `report_available_at`. `rate` — совместимый псевдоним `coins_per_hour`. В публичном каталоге добавляются `my_status` и `activity_id`.
 
-После `seed_demo` на новом учебном пользователе, с функциями `api` и `signIn` из примера выше:
+Создание:
 
-```javascript
-await signIn('volunteer');
-const event = (await api('events/')).results[0];
-const activity = await api(`events/${event.id}/apply/`, {});
-await api(`activities/${activity.id}/hours/`, { hours: '3.0' });
-console.log(await api('me/')); // balance: 0
-
-await signIn('coordinator');
-await api(`coordinator/activities/${activity.id}/review/`, {
-  decision: 'approved', hours: '3.0', note: 'Учебная проверка',
-});
-
-await signIn('volunteer');
-console.log(await api('me/')); // balance: 30, confirmed_hours: "3.0"
-const reward = (await api('rewards/')).results.find(item => item.price === 20);
-const requestKey = crypto.randomUUID();
-const redemption = await api(`rewards/${reward.id}/purchase/`, { request_key: requestKey });
-console.log(await api('me/')); // balance: 10
-console.log(await api('me/transactions/')); // +30 и -20 с основаниями
-
-await signIn('coordinator');
-console.log(await api('coordinator/redemptions/'));
-await api(`coordinator/redemptions/${redemption.id}/issue/`, {});
-try {
-  await api(`coordinator/activities/${activity.id}/review/`, {
-    decision: 'approved', hours: '3.0',
-  });
-} catch (error) {
-  console.log(error.message); // 409: заявка уже рассмотрена
+```json
+{
+  "title": "Помощь городскому парку",
+  "location": "Обнинск",
+  "description": "Учебная акция",
+  "starts_at": "2026-10-17T09:00:00+03:00",
+  "ends_at": "2026-10-17T12:00:00+03:00",
+  "coins_per_hour": 20,
+  "is_active": true
 }
 ```
 
-Повторять демонстрацию следует с новой учётной записью или другим событием: рассмотренная заявка намеренно не сбрасывается. Вместо API-подтверждения можно войти координатором в `/admin/` и воспользоваться «Проверить часы».
+Ставка — целое 1–100000. Дата окончания позже начала. Изменение существующего события доступно в Django Admin.
 
-## Ошибки
+Участие: `id`, `event_id`, `event_title`, даты события, `volunteer_id`, `volunteer_username`, `rate_snapshot`, `requested_hours`, `report_text`, `report_submitted_at`, `status`, `can_submit_report`, `confirmed_hours`, `coefficient`, `multiplier`, `coins_awarded`, `review_note`, `reviewed_by_id`, `reviewed_at`, `created_at`.
 
-- `400` — некорректный JSON, часы, UUID или отсутствующее поле.
-- `401` — не выполнен вход / неверные учётные данные.
-- `403` — нет прав или ошибка CSRF; Django может вернуть HTML для CSRF.
-- `404` — объект отсутствует либо заявка принадлежит другому пользователю.
-- `409` — заявка уже рассмотрена, недостаточно койнов, поощрение недоступно и другие конфликты состояния.
-- `405` — неподдерживаемый HTTP-метод.
+`coefficient` и `multiplier` — два имени одного значения. Часы и коэффициент передаются строками Decimal, койны — целыми. Время — ISO 8601. Нельзя редактировать чужое участие.
 
-Бизнес-ошибки возвращаются как `{ "error": "Понятное описание" }`. При успешном создании заявки/покупки возвращается `201`; при безопасном повторе — `200`.
+Переходы: `registered` после записи → `pending` после отчёта → `approved` / `rejected` после решения. До отчёта начислять нельзя. Отчёт принимается только после `report_available_at` (окончание либо начало, если окончание не заполнено). Описание в новом методе обязательно, до 3000 символов; часы 0.1–24 с шагом 0.1. До проверки отчёт можно уточнять.
+
+Подтверждение:
+
+```json
+{
+  "decision": "approved",
+  "hours": "3.0",
+  "coefficient": "1.50",
+  "note": "Работа под дождём"
+}
+```
+
+Можно отправить `multiplier` вместо `coefficient`. По умолчанию 1.00. Диапазон **1.00–10.00**, шаг **0.05**. При отличии от 1 обязателен комментарий. Формула: подтверждённые часы × rate_snapshot × коэффициент, ROUND_HALF_UP до целого. Ставка берётся из записи, а не из текущего события или присланного тела.
+
+Отказ:
+
+```json
+{ "decision": "rejected", "note": "Участие не подтверждено" }
+```
+
+После решения повторная проверка возвращает 409. Своё участие координатор подтвердить не может. Координатору нужны `is_staff` и разрешение `catalog.review_activity`.
+
+## Поощрения и история
+
+| Метод | Путь | Назначение |
+|---|---|---|
+| GET | `rewards/` | Активные учебные награды: `id`, `title`, `description`, `price` |
+| POST | `rewards/{id}/purchase/` | `{ request_key: "UUID" }`; списать и создать запрос |
+| GET | `me/redemptions/` | Свои запросы и статусы выдачи |
+| GET | `me/transactions/` | Своя история начислений и списаний |
+| GET | `coordinator/redemptions/` | Запросы координатору |
+| POST | `coordinator/redemptions/{id}/issue/` | `{}`; отметить условную выдачу |
+
+Запрос на поощрение содержит `id`, `reward_id`, `reward_title`, `volunteer_id`, `price`, `request_key`, `status`, `created_at`, `issued_by_id`, `issued_at`; координатору добавляется имя волонтёра. Статусы: `pending`, `issued`.
+
+UUID генерируется один раз на намерение купить. При потере ответа повторяется тот же ключ. React сохраняет только незавершённые UUID в sessionStorage, без паролей и сессионных токенов. После подтверждения ответа или сверки со списком запросов ключ убирается. Повтор ключа возвращает тот же запрос без списания. Новый ключ означает новую покупку.
+
+Цена и баланс берутся из БД. Покупка и начисление атомарны. Выдача не списывает койны ещё раз. Для выдачи требуется `catalog.fulfill_redemption`.
+
+## Коды ответа
+
+- 200 — успех или безопасный повтор записи/покупки.
+- 201 — пользователь, участие, событие или запрос создан.
+- 400 — ошибки JSON, полей, времени, часов или коэффициента.
+- 401 — требуется вход / неверный пароль.
+- 403 — недостаточно прав либо CSRF; для CSRF добавляется `code: csrf_failed`.
+- 404 — объект отсутствует либо чужой.
+- 409 — конфликт состояния, недостаточно койнов, уже рассмотрено / выдано.
+- 405 — неподдерживаемый метод.
+
+Списки возвращаются как `{ results: [...] }`. В учебном MVP пагинации нет.

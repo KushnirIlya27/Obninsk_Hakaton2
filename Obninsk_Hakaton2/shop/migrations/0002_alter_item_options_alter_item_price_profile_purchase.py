@@ -8,44 +8,93 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('shop', '0001_initial'),
+        ("shop", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='item',
-            options={'ordering': ['price'], 'verbose_name': 'Товар', 'verbose_name_plural': 'Товары'},
+            name="item",
+            options={
+                "ordering": ["price"],
+                "verbose_name": "Товар",
+                "verbose_name_plural": "Товары",
+            },
         ),
         migrations.AlterField(
-            model_name='item',
-            name='price',
-            field=models.PositiveIntegerField(verbose_name='Цена в коинах'),
+            model_name="item",
+            name="price",
+            field=models.PositiveIntegerField(verbose_name="Цена в коинах"),
         ),
         migrations.CreateModel(
-            name='Profile',
+            name="Profile",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('coins', models.PositiveIntegerField(default=100, verbose_name='Коины')),
-                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='profile', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "coins",
+                    models.PositiveIntegerField(default=100, verbose_name="Коины"),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="profile",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Профиль',
-                'verbose_name_plural': 'Профили',
+                "verbose_name": "Профиль",
+                "verbose_name_plural": "Профили",
             },
         ),
         migrations.CreateModel(
-            name='Purchase',
+            name="Purchase",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('bought_at', models.DateTimeField(auto_now_add=True, verbose_name='Дата покупки')),
-                ('item', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to='shop.item')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='purchases', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "bought_at",
+                    models.DateTimeField(
+                        auto_now_add=True, verbose_name="Дата покупки"
+                    ),
+                ),
+                (
+                    "item",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="purchases",
+                        to="shop.item",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="purchases",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Покупка',
-                'verbose_name_plural': 'Покупки',
-                'ordering': ['-bought_at'],
+                "verbose_name": "Покупка",
+                "verbose_name_plural": "Покупки",
+                "ordering": ["-bought_at"],
             },
         ),
     ]

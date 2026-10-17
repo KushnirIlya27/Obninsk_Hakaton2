@@ -1,0 +1,5 @@
+{% extends 'volunteers/base.html' %}{% block title %}Отчёт на получение койнов{% endblock %}
+{% block content %}<a href="{% url 'event_detail' activity.event_id %}">← К мероприятию</a><article class="card detail"><p class="eyebrow">Подтверждение участия</p><h1>Отчёт на получение койнов</h1><h2>{{ activity.event.title }}</h2><p>Ваша ставка: <strong>{{ activity.rate_snapshot }} койнов/час</strong>. При коэффициенте 1× за 3 подтверждённых часа вы получите {{ activity.rate_snapshot|add:activity.rate_snapshot|add:activity.rate_snapshot }} койнов.</p>
+{% if activity.status == 'pending' %}<div class="notice">Отчёт уже на проверке. До решения координатора вы можете уточнить часы и описание.</div>{% endif %}
+{% if can_submit %}<form method="post">{% csrf_token %}{{ form.as_p }}<p class="muted">Вы заявляете часы, а координатор проверяет участие и подтверждает итоговую сумму. Отправка формы сама по себе не начисляет койны.</p><button type="submit">Отправить координатору</button></form>
+{% else %}{{ form.non_field_errors }}<p>Отправка недоступна: мероприятие ещё не закончилось или заявка уже рассмотрена.</p>{% endif %}</article>{% endblock %}

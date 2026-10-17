@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import timedelta
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -46,7 +47,9 @@ class VolunteerTests(TestCase):
             )
         )
         cls.event = Event.objects.create(
-            title="Уборка парка", location="Обнинск", starts_at=timezone.now()
+            title="Уборка парка",
+            location="Обнинск",
+            starts_at=timezone.now() - timedelta(hours=5),
         )
         cls.reward = Reward.objects.create(title="Значок", price=20)
 
@@ -54,6 +57,7 @@ class VolunteerTests(TestCase):
         self.activity, _ = apply_to_event(
             volunteer=self.volunteer, event_id=self.event.pk
         )
+        submit_hours(volunteer=self.volunteer, activity_id=self.activity.pk, hours=3)
 
     def approve(self):
         return review_activity(

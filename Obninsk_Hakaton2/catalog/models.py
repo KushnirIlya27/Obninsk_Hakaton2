@@ -1,7 +1,12 @@
 from decimal import Decimal
 
 from django.conf import settings
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.exceptions import ValidationError
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+    StepValueValidator,
+)
 from django.db import models
 
 
@@ -10,12 +15,63 @@ class Event(models.Model):
     description = models.TextField("Описание", blank=True)
     location = models.CharField("Место", max_length=200)
     starts_at = models.DateTimeField("Начало")
+    ends_at = models.DateTimeField(
+        "Окончание",
+        null=True,
+        blank=True,
+        help_text="Отчёт доступен после окончания. Если дата не задана — после начала мероприятия.",
+    )
+    coins_per_hour = models.PositiveIntegerField(
+        "Ставка, койнов в час",
+        default=10,
+        validators=[MinValueValidator(1), MaxValueValidator(100000)],
+    )
     is_active = models.BooleanField("Открыта запись", default=True)
 
     class Meta:
         verbose_name = "Мероприятие"
         verbose_name_plural = "Мероприятия"
         ordering = ["starts_at", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(coins_per_hour__gte=1, coins_per_hour__lte=100000),
+                name="valid_event_rate",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ends_at__isnull=True)
+                | models.Q(ends_at__gt=models.F("starts_at")),
+                name="event_end_after_start",
+            ),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.ends_at and self.starts_at and self.ends_at <= self.starts_at:
+            raise ValidationError({"ends_at": "Окончание должно быть позже начала."})
+
+    @property
+    def report_available_at(self):
+        return self.ends_at or self.starts_at
+
+    def __str__(self):
+        return self.title
+
+
+class EventTemplate(models.Model):
+    title = models.CharField("Название", max_length=200)
+    description = models.TextField("Описание", blank=True)
+    location = models.CharField("Место", max_length=200)
+    coins_per_hour = models.PositiveIntegerField("Ставка, койнов в час", default=10,
+        validators=[MinValueValidator(1), MaxValueValidator(100000)])
+    is_active = models.BooleanField("Доступен", default=True)
+
+    class Meta:
+        verbose_name = "Шаблон мероприятия"
+        verbose_name_plural = "Шаблоны мероприятий"
+        ordering = ["title", "id"]
+        constraints = [models.CheckConstraint(
+            condition=models.Q(coins_per_hour__gte=1, coins_per_hour__lte=100000),
+            name="valid_template_rate")]
 
     def __str__(self):
         return self.title
@@ -23,7 +79,8 @@ class Event(models.Model):
 
 class Activity(models.Model):
     class Status(models.TextChoices):
-        PENDING = "pending", "Ожидает проверки"
+        REGISTERED = "registered", "Записан на мероприятие"
+        PENDING = "pending", "Отчёт ожидает проверки"
         APPROVED = "approved", "Подтверждена"
         REJECTED = "rejected", "Отклонена"
 
@@ -56,7 +113,7 @@ class Activity(models.Model):
         "Статус",
         max_length=12,
         choices=Status.choices,
-        default=Status.PENDING,
+        default=Status.REGISTERED,
         editable=False,
         db_index=True,
     )
@@ -74,6 +131,30 @@ class Activity(models.Model):
     )
     review_note = models.TextField(
         "Комментарий координатора", blank=True, editable=False
+    )
+    rate_snapshot = models.PositiveIntegerField(
+        "Ставка при записи, койнов/ч", default=10, editable=False
+    )
+    multiplier = models.DecimalField(
+        "Коэффициент",
+        max_digits=4,
+        decimal_places=2,
+        default=Decimal("1.00"),
+        validators=[
+            MinValueValidator(Decimal("1.00")),
+            MaxValueValidator(Decimal("10.00")),
+            StepValueValidator(Decimal("0.05")),
+        ],
+        editable=False,
+    )
+    coins_awarded = models.PositiveIntegerField(
+        "Начислено койнов", default=0, editable=False
+    )
+    report_text = models.TextField(
+        "Отчёт волонтёра", blank=True, max_length=3000, editable=False
+    )
+    report_submitted_at = models.DateTimeField(
+        "Отчёт отправлен", null=True, blank=True, editable=False
     )
     created_at = models.DateTimeField("Дата заявки", auto_now_add=True)
 
@@ -94,9 +175,41 @@ class Activity(models.Model):
                 name="valid_requested_hours",
             ),
             models.CheckConstraint(
+                condition=models.Q(rate_snapshot__gte=1, rate_snapshot__lte=100000),
+                name="valid_activity_rate",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(multiplier__gte=Decimal("0.10"), multiplier__lte=10),
+                name="valid_activity_multiplier",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status="approved", coins_awarded__gt=0)
+                | (~models.Q(status="approved") & models.Q(coins_awarded=0)),
+                name="valid_activity_coins",
+            ),
+            models.CheckConstraint(
                 condition=(
                     models.Q(
+                        status="registered",
+                        requested_hours__isnull=True,
+                        report_submitted_at__isnull=True,
+                    )
+                    | models.Q(
                         status="pending",
+                        requested_hours__isnull=False,
+                        report_submitted_at__isnull=False,
+                    )
+                    | models.Q(
+                        status__in=["approved", "rejected"],
+                        report_submitted_at__isnull=False,
+                    )
+                ),
+                name="valid_activity_report",
+            ),
+            models.CheckConstraint(
+                condition=(
+                    models.Q(
+                        status__in=["registered", "pending"],
                         confirmed_hours__isnull=True,
                         reviewed_by__isnull=True,
                         reviewed_at__isnull=True,
@@ -150,6 +263,7 @@ class Redemption(models.Model):
     class Status(models.TextChoices):
         PENDING = "pending", "Ожидает выдачи"
         ISSUED = "issued", "Условно выдано"
+        CANCELLED = "cancelled", "Отменено, койны возвращены"
 
     volunteer = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Волонтёр"
@@ -180,6 +294,10 @@ class Redemption(models.Model):
         "Дата выдачи", null=True, blank=True, editable=False
     )
 
+    cancelled_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT,
+        null=True, blank=True, related_name="cancelled_redemptions", editable=False)
+    cancelled_at = models.DateTimeField(null=True, blank=True, editable=False)
+
     class Meta:
         verbose_name = "Запрос на поощрение"
         verbose_name_plural = "Запросы на выдачу поощрений"
@@ -194,12 +312,17 @@ class Redemption(models.Model):
             ),
             models.CheckConstraint(
                 condition=models.Q(
-                    status="pending", issued_by__isnull=True, issued_at__isnull=True
+                    status__in=["pending", "cancelled"], issued_by__isnull=True, issued_at__isnull=True
                 )
                 | models.Q(
                     status="issued", issued_by__isnull=False, issued_at__isnull=False
                 ),
                 name="valid_redemption_issue",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(status="cancelled", cancelled_by__isnull=False, cancelled_at__isnull=False)
+                | models.Q(status__in=["pending", "issued"], cancelled_by__isnull=True, cancelled_at__isnull=True),
+                name="valid_redemption_cancel",
             ),
         ]
 
@@ -227,6 +350,8 @@ class CoinTransaction(models.Model):
         blank=True,
         verbose_name="Запрос на поощрение",
     )
+    refund = models.OneToOneField(Redemption, on_delete=models.PROTECT, null=True,
+        blank=True, related_name="refund_transaction", verbose_name="Возврат по запросу")
     created_at = models.DateTimeField("Дата", auto_now_add=True)
 
     class Meta:
@@ -236,11 +361,12 @@ class CoinTransaction(models.Model):
         constraints = [
             models.CheckConstraint(
                 condition=models.Q(
-                    amount__gt=0, activity__isnull=False, redemption__isnull=True
+                    amount__gt=0, activity__isnull=False, redemption__isnull=True, refund__isnull=True
                 )
                 | models.Q(
-                    amount__lt=0, activity__isnull=True, redemption__isnull=False
-                ),
+                    amount__lt=0, activity__isnull=True, redemption__isnull=False, refund__isnull=True
+                )
+                | models.Q(amount__gt=0, activity__isnull=True, redemption__isnull=True, refund__isnull=False),
                 name="transaction_sign_and_source",
             )
         ]

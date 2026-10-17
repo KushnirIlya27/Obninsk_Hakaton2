@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "accounts",
     "catalog",
-    "shop"
+    "shop",
 ]
 
 MIDDLEWARE = [
@@ -127,10 +127,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "shop:index"
 LOGOUT_REDIRECT_URL = "shop:index"
+# React development server uses a same-origin proxy to these Django endpoints.
+CSRF_FAILURE_VIEW = "catalog.views.csrf_failure"
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://127.0.0.1:5173").rstrip("/")
+
+
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "192.168.1.162",
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://192.168.1.162:5173",
+]

@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from uuid import uuid4
+from datetime import timedelta
 
 from accounts.models import VolunteerProfile
 from django.contrib.auth import get_user_model
@@ -10,7 +11,13 @@ from django.test import TransactionTestCase
 from django.utils import timezone
 
 from .models import CoinTransaction, Event, Redemption, Reward
-from .services import Conflict, apply_to_event, purchase_reward, review_activity
+from .services import (
+    Conflict,
+    apply_to_event,
+    purchase_reward,
+    review_activity,
+    submit_hours,
+)
 
 
 class ConcurrentOperationsTests(TransactionTestCase):
@@ -28,9 +35,12 @@ class ConcurrentOperationsTests(TransactionTestCase):
             Permission.objects.get(codename="review_activity")
         )
         event = Event.objects.create(
-            title="Parallel test", location="Обнинск", starts_at=timezone.now()
+            title="Parallel test",
+            location="Обнинск",
+            starts_at=timezone.now() - timedelta(hours=5),
         )
         self.activity, _ = apply_to_event(volunteer=self.volunteer, event_id=event.pk)
+        submit_hours(volunteer=self.volunteer, activity_id=self.activity.pk, hours=3)
         self.reward = Reward.objects.create(title="Значок", price=20)
 
     def run_concurrently(self, operation):

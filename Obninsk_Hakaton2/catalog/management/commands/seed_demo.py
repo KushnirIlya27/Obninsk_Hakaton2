@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 from catalog.models import Event, Reward
@@ -18,6 +19,9 @@ class Command(BaseCommand):
         group, _ = Group.objects.get_or_create(name="Координаторы")
         allowed = {
             "catalog": [
+                "view_eventtemplate",
+                "add_eventtemplate",
+                "change_eventtemplate",
                 "view_event",
                 "add_event",
                 "change_event",
@@ -59,19 +63,37 @@ class Command(BaseCommand):
                     f"{username} уже существует; пароль и права не изменены."
                 )
             VolunteerProfile.objects.get_or_create(user=user)
-        for index, (title, location) in enumerate(
+        for index, (title, location, rate) in enumerate(
             [
-                ("Уборка городского парка", "Городской парк Обнинска"),
-                ("Помощь учебному приюту", "Учебный волонтёрский центр"),
-                ("Сбор книг для библиотеки", "Учебная библиотека"),
+                ("Уборка городского парка", "Городской парк Обнинска", 10),
+                ("Помощь учебному приюту", "Учебный волонтёрский центр", 15),
+                ("Сбор книг для библиотеки", "Учебная библиотека", 20),
             ]
         ):
             Event.objects.get_or_create(
                 title=title,
                 defaults={
                     "location": location,
-                    "starts_at": timezone.now() + timedelta(days=index + 1),
+                    "starts_at": timezone.now() - timedelta(days=3 - index, hours=3),
+                    "ends_at": timezone.now() - timedelta(days=3 - index),
+                    "coins_per_hour": rate,
                     "description": "Учебное мероприятие. Все данные демонстрационные.",
+                },
+            )
+        now = timezone.now()
+        if (
+            not Event.objects.filter(is_active=True)
+            .filter(Q(ends_at__lte=now) | Q(ends_at__isnull=True, starts_at__lte=now))
+            .exists()
+        ):
+            Event.objects.get_or_create(
+                title="Учебное событие: помощь парку",
+                defaults={
+                    "location": "Обнинск",
+                    "description": "Завершённое учебное событие для проверки отчёта.",
+                    "starts_at": now - timedelta(hours=5),
+                    "ends_at": now - timedelta(hours=2),
+                    "coins_per_hour": 10,
                 },
             )
         for title, price in [
