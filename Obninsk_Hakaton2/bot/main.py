@@ -17,14 +17,12 @@ from setup_django import setup as setup_django
 setup_django()
 
 from asgiref.sync import sync_to_async
-
+from accounts.models import VolunteerProfile
 from catalog.models import Event
 
 BOT_TOKEN = BotK
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
-
-db = sync_to_async
 
 
 @dp.message(CommandStart())
@@ -33,20 +31,22 @@ async def cmd_start(message: Message):
         keyboard=[
             [KeyboardButton(text="📖 Мероприятия")],
             [KeyboardButton(text="ℹ️ О нас")],
+            [KeyboardButton(text="🏆 Таблица лидеров")],
         ],
-        resize_keyboard=True,            # компактный размер
+        resize_keyboard=True,
         input_field_placeholder="Выберите пункт",
     )
-    # ДОБАВЛЕН reply_markup=kb, чтобы клавиатура появилась у пользователя
     await message.answer(
         "Привет! Этот бот создан для показа мероприятий, которые будут скоро проходить",
-        reply_markup=kb
+        reply_markup=kb,
     )
 
 
 @dp.message(F.text == "📖 Мероприятия")
 async def show_events(message: Message):
-    events = await db(list)(Event.objects.filter(is_active=True).order_by('starts_at')[:5])
+    events = await sync_to_async(list)(
+        Event.objects.filter(is_active=True).order_by("starts_at")[:5]
+    )
 
     if not events:
         await message.answer("Пока нет предстоящих мероприятий 😔")
@@ -54,17 +54,40 @@ async def show_events(message: Message):
 
     text = "Ближайшие события:\n\n"
     for event in events:
-        text += (f"📌 {event.title}\n"
-                 f"Где: {event.location}\n"
-                 f"Когда: {event.starts_at.strftime('%d.%m.%Y %H:%M')}\n"
-                 f"Описание: {event.description}\n")
+        text += (
+            f"📌 {event.title}\n"
+            f"Где: {event.location}\n"
+            f"Когда: {event.starts_at.strftime('%d.%m.%Y %H:%M')}\n"
+            f"Описание: {event.description or '—'}\n"
+        )
 
-    await message.answer(text)
+    await message.answer(text[:4000])
 
 
 @dp.message(F.text == "ℹ️ О нас")
 async def about_btn(message: Message):
     await message.answer("Здесь должна быть ссылка 🤖")
+
+
+@dp.message(F.text == "🏆 Таблица лидеров")
+async def show_leaders(message: Message):
+    volunteers = await sync_to_async(list)(
+        VolunteerProfile.objects
+        .filter(confirmed_hours__gt=0)
+        .select_related("user")
+        .order_by("-confirmed_hours", "user__username")
+    )
+
+    if not volunteers:
+        await message.answer("Пока нет волонтёров с часами")
+        return
+
+    lines = ["🏆 Волонтёры по часам:\n"]
+    for i, v in enumerate(volunteers, start=1):
+        name = v.user.get_full_name() or v.user.get_username()
+        lines.append(f"{i}. {name} — {v.confirmed_hours:.1f} ч")
+
+    await message.answer("\n".join(lines)[:4000])
 
 
 async def main():
