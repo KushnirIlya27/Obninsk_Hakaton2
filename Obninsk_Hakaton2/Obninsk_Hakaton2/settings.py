@@ -34,7 +34,8 @@ if not DEBUG and not os.environ.get("DJANGO_SECRET_KEY"):
 
 
 ALLOWED_HOSTS = os.environ.get(
-    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]"
+    "DJANGO_ALLOWED_HOSTS", 
+    "localhost,127.0.0.1,192.168.8.103,10.201.1.157,10.143.61.18,[::1]"
 ).split(",")
 
 
@@ -139,14 +140,14 @@ CSRF_FAILURE_VIEW = "catalog.views.csrf_failure"
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://127.0.0.1:5173").rstrip("/")
 
 
-ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "192.168.1.162",
-]
+# ALLOWED_HOSTS = [
+#     "localhost",
+#     "127.0.0.1",
+#     "192.168.1.162",
+# ]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "http://192.168.1.162:5173",
+    "http://192.168.8.103:5173",
 ]
