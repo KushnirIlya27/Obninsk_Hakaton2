@@ -2,19 +2,19 @@ import re
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Person
+from .models import VolunteerProfile
 
 
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=False, label="Почта")
-    phone = forms.CharField(required=False, max_length=32, label="Телефон")
-    info = forms.CharField(
-        required=False, max_length=2000, label="О себе", widget=forms.Textarea
+    email = forms.EmailField(required=True, label="Почта")
+    phone = forms.CharField(required=True, max_length=32, label="Телефон")
+    group = forms.CharField(
+        required=True, max_length=2000, label="Группа", widget=forms.Textarea
     )
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = ("username", "email", "phone", "info", "password1", "password2")
+        fields = ("username", "email", "phone", "group", "password1", "password2")
 
     def clean_username(self):
         username = self.cleaned_data["username"].strip()
@@ -44,9 +44,9 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data.get("email", "")
         if commit:
             user.save()
-            person, _ = Person.objects.get_or_create(user=user)
-            person.phone = self.cleaned_data.get("phone") or None
-            person.email = user.email or None
-            person.info = self.cleaned_data.get("info", "")
-            person.save(update_fields=["phone", "email", "info"])
+            VolunteerProfile, _ = VolunteerProfile.objects.get_or_create(user=user)
+            VolunteerProfile.phone = self.cleaned_data["phone"]
+            VolunteerProfile.email = self.cleaned_data["email"]
+            VolunteerProfile.group = self.cleaned_data["group"]
+            VolunteerProfile.save()
         return user

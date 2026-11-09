@@ -17,6 +17,16 @@ class VolunteerProfile(models.Model):
         default=0,
         editable=False,
     )
+    social_volunteering_hours = models.DecimalField("Социальное", default=0, max_digits=10, decimal_places=1, editable=False)
+    environmental_volunteering_hours = models.DecimalField("Экологическое", default=0, max_digits=10, decimal_places=1, editable=False)
+    cultural_volunteering_hours = models.DecimalField("Культурное", default=0, max_digits=10, decimal_places=1, editable=False)
+    event_volunteering_hours = models.DecimalField("Событийное", default=0, max_digits=10, decimal_places=1, editable=False)
+    sports_volunteering_hours = models.DecimalField("Спортивное", default=0, max_digits=10, decimal_places=1, editable=False)
+    zoo_volunteering_hours = models.DecimalField("Зооволонтёрство", default=0, max_digits=10, decimal_places=1, editable=False)
+    scientific_volunteering_hours = models.DecimalField("Научное", default=0, max_digits=10, decimal_places=1, editable=False)
+    phone = models.CharField("Телефон", max_length=20, null=True, blank=True, default=None, editable=False)
+    email = models.EmailField("Email", null=True, blank=True, default=None, editable=False)
+    group = models.CharField("Группа", max_length=255, null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "Карточка волонтёра"
@@ -30,30 +40,3 @@ class VolunteerProfile(models.Model):
 
     def __str__(self):
         return self.user.get_full_name() or self.user.get_username()
-
-
-# Keep the registration branch model for compatibility.
-from django.db import models
-
-
-class Person(models.Model):
-    user = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name="person",
-    )
-    hours = models.IntegerField(default=0)
-    tokens = models.IntegerField(default=0)
-    phone = models.CharField(max_length=32, null=True, blank=True, default=None)
-    email = models.EmailField(null=True, blank=True, default=None)
-    info = models.TextField(blank=True, default="", max_length=2000)
-
-    def __str__(self):
-        return self.user.get_full_name() or self.user.username
-
-
-@receiver(post_save, sender=User)
-def create_person(sender, instance, created, **kwargs):
-    if created:
-        Person.objects.get_or_create(user=instance)
-        VolunteerProfile.objects.get_or_create(user=instance)
