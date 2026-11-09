@@ -1,7 +1,7 @@
 import json
 from functools import wraps
 
-from accounts.models import VolunteerProfile, Person
+from accounts.models import VolunteerProfile
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import transaction, IntegrityError
@@ -238,7 +238,7 @@ def rewards(request):
 
 @endpoint(["GET"])
 def me(request):
-    person = Person.objects.filter(user=request.user).first()
+    VolunteerProfile = VolunteerProfile.objects.filter(user=request.user).first()
     profile = VolunteerProfile.objects.filter(user=request.user).first()
     return JsonResponse(
         {
@@ -246,8 +246,8 @@ def me(request):
             "username": request.user.username,
             "name": request.user.get_full_name(),
             "email": request.user.email,
-            "phone": (person.phone or "") if person else "",
-            "info": person.info if person else "",
+            "phone": (VolunteerProfile.phone or "") if VolunteerProfile else "",
+            "info": VolunteerProfile.group if VolunteerProfile else "",
             "can_issue": request.user.is_staff
             and request.user.has_perm("catalog.fulfill_redemption"),
             "can_manage_events": request.user.is_staff
