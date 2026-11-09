@@ -15,9 +15,9 @@ class CustomUserCreationForm(UserCreationForm):
         label="Телефон",
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
-    info = forms.CharField(
+    group = forms.CharField(
         required=True,
-        label="Информация о себе",
+        label="Группа",
         widget=forms.TextInput(attrs={"class": "form-control"}),
     )
 
@@ -50,6 +50,6 @@ class CustomUserCreationForm(UserCreationForm):
             person, _ = Person.objects.get_or_create(user=user)
             person.phone = self.cleaned_data["phone"]
             person.email = self.cleaned_data["email"]
-            person.info = self.cleaned_data["info"]
+            person.group = self.cleaned_data["group"]
             person.save()
         return user

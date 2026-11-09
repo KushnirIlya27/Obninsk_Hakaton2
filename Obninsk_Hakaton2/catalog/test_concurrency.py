@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from uuid import uuid4
 
-from accounts.models import VolunteerProfile
+from accounts.models import Person
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db import close_old_connections, connection
@@ -63,7 +63,7 @@ class ConcurrentOperationsTests(TransactionTestCase):
             )
 
         self.assertCountEqual(self.run_concurrently(approve), ["success", "conflict"])
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 30)
         self.assertEqual(CoinTransaction.objects.count(), 1)
 
     def test_two_simultaneous_purchases_cannot_overspend(self):
@@ -83,6 +83,6 @@ class ConcurrentOperationsTests(TransactionTestCase):
             )
 
         self.assertCountEqual(self.run_concurrently(buy), ["success", "conflict"])
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 10)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 10)
         self.assertEqual(Redemption.objects.count(), 1)
         self.assertEqual(CoinTransaction.objects.count(), 2)

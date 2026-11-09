@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "accounts",
     "catalog",
-    "shop"
 ]
 
 MIDDLEWARE = [
@@ -85,9 +84,12 @@ WSGI_APPLICATION = "Obninsk_Hakaton2.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-        "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE"},
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "obninsk_db",
+        "USER": "myuser",
+        "PASSWORD": "mypassword",
+        "HOST": "127.0.0.1",
+        "PORT": "5432",
     }
 }
 

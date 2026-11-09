@@ -69,7 +69,7 @@ class ActivityAdmin(ReadOnlyAdmin):
     ]
 
     def has_add_permission(self, request):
-        return request.user.has_perm("catalog.add_activity")
+        return False
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

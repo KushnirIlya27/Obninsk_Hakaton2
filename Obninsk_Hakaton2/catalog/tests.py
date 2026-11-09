@@ -2,7 +2,7 @@ from decimal import Decimal
 from unittest.mock import patch
 from uuid import uuid4
 
-from accounts.models import VolunteerProfile
+from accounts.models import Person
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -65,9 +65,9 @@ class VolunteerTests(TestCase):
 
     def test_full_scenario_and_duplicate_credit(self):
         submit_hours(volunteer=self.volunteer, activity_id=self.activity.pk, hours=3)
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 0)
         self.approve()
-        profile = VolunteerProfile.objects.get(user=self.volunteer)
+        profile = Person.objects.get(user=self.volunteer)
         self.assertEqual((profile.balance, profile.confirmed_hours), (30, Decimal("3")))
         redemption, created = purchase_reward(
             volunteer=self.volunteer, reward_id=self.reward.pk, request_key=uuid4()
@@ -137,7 +137,7 @@ class VolunteerTests(TestCase):
         )
         with self.assertRaises(Conflict):
             self.approve()
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 0)
         self.assertFalse(CoinTransaction.objects.exists())
 
     def test_hours_validation_and_fractional_credit(self):
@@ -152,7 +152,7 @@ class VolunteerTests(TestCase):
             decision="approved",
             hours="1.5",
         )
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 15)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 15)
 
     def test_insufficient_funds(self):
         with self.assertRaises(Conflict):
@@ -176,7 +176,7 @@ class VolunteerTests(TestCase):
         )
         self.assertFalse(created)
         self.assertEqual((second.pk, second.price), (first.pk, 20))
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 10)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 10)
         another = Reward.objects.create(title="Другое", price=1)
         with self.assertRaises(Conflict):
             purchase_reward(
@@ -195,7 +195,7 @@ class VolunteerTests(TestCase):
             purchase_reward(
                 volunteer=self.volunteer, reward_id=self.reward.pk, request_key=uuid4()
             )
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 30)
 
     def test_approval_rollback(self):
         with patch(
@@ -206,7 +206,7 @@ class VolunteerTests(TestCase):
                 self.approve()
         self.activity.refresh_from_db()
         self.assertEqual(self.activity.status, "pending")
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 0)
 
     def test_purchase_rollback(self):
         self.approve()
@@ -221,7 +221,7 @@ class VolunteerTests(TestCase):
                     request_key=uuid4(),
                 )
         self.assertFalse(Redemption.objects.exists())
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 30)
 
     def test_database_duplicate_ledger_source(self):
         self.approve()
@@ -338,7 +338,7 @@ class VolunteerTests(TestCase):
             self.client.post(url, {"decision": "approved", "hours": 3}),
             "уже рассмотрена",
         )
-        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
+        self.assertEqual(Person.objects.get(user=self.volunteer).balance, 30)
 
     def test_admin_readonly_and_no_delete(self):
         self.approve()

@@ -50,7 +50,7 @@ def apply_to_event(*, volunteer, event_id):
     if not event.is_active:
         raise Conflict("Запись на мероприятие закрыта.")
     activity, created = Activity.objects.get_or_create(volunteer=volunteer, event=event)
-    Person.objects.get_or_create(user=volunteer)          # было VolunteerProfile
+    Person.objects.get_or_create(user=volunteer)
     return activity, created
 
 

@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase, Client
 from django.urls import reverse
-from accounts.models import Person, VolunteerProfile
+from .models import Person
 from django.core.management import call_command
 
 
@@ -17,7 +17,7 @@ class RegistrationIntegrationTests(TestCase):
         self.assertRedirects(response, reverse('profile'))
         user = get_user_model().objects.get(username='new-volunteer')
         self.assertFalse(user.is_staff)
-        self.assertEqual(VolunteerProfile.objects.get(user=user).balance, 0)
+        self.assertEqual(Person.objects.get(user=user).balance, 0)
         self.assertTrue(Person.objects.filter(user=user).exists())
         self.assertEqual(self.client.get('/api/me/').json()['id'], user.pk)
         self.assertContains(self.client.get(reverse('profile')), 'new-volunteer')

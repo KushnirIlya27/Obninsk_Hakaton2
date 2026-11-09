@@ -11,18 +11,25 @@ class Person(models.Model):
         on_delete=models.CASCADE,
         related_name="account",
     )
-    # было IntegerField — стало DecimalField, как в VolunteerProfile.confirmed_hours
+
     hours = models.DecimalField(
         "Подтверждённые часы",
         max_digits=10,
         decimal_places=1,
         default=0,
     )
-    # было IntegerField — стало PositiveIntegerField, как в VolunteerProfile.balance
+
+    social_volunteering_hours = models.DecimalField("Социальное", default=0, max_digits=10, decimal_places=1)
+    environmental_volunteering_hours = models.DecimalField("Экологическое", default=0, max_digits=10, decimal_places=1)
+    cultural_volunteering_hours = models.DecimalField("Культурное", default=0, max_digits=10, decimal_places=1)
+    event_volunteering_hours = models.DecimalField("Событийное", default=0, max_digits=10, decimal_places=1)
+    sports_volunteering_hours = models.DecimalField("Спортивное", default=0, max_digits=10, decimal_places=1)
+    zoo_volunteering_hours = models.DecimalField("Зооволонтёрство", default=0, max_digits=10, decimal_places=1)
+    scientific_volunteering_hours = models.DecimalField("Научное", default=0, max_digits=10, decimal_places=1)
     tokens = models.PositiveIntegerField("Токены", default=0)
     phone = models.CharField("Телефон", max_length=20, null=True, blank=True, default=None)
     email = models.EmailField("Email", null=True, blank=True, default=None)
-    info = models.CharField("Инфо", max_length=255, null=True, blank=True, default=None)
+    group = models.CharField("Группа", max_length=255, null=True, blank=True, default=None)
 
     class Meta:
         verbose_name = "Профиль"

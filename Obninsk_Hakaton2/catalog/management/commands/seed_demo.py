@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from accounts.models import VolunteerProfile
+from accounts.models import Person  # <-- исправлено
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 "fulfill_redemption",
                 "view_cointransaction",
             ],
-            "accounts": ["view_volunteerprofile"],
+            "accounts": ["view_person"],  # <-- исправлено (маленькая буква)
         }
         for app, codenames in allowed.items():
             group.permissions.add(
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"{username} уже существует; пароль и права не изменены."
                 )
-            VolunteerProfile.objects.get_or_create(user=user)
+            Person.objects.get_or_create(user=user)
         for index, (title, location) in enumerate(
             [
                 ("Уборка городского парка", "Городской парк Обнинска"),
