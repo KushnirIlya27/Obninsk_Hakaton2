@@ -44,9 +44,9 @@ class CustomUserCreationForm(UserCreationForm):
         user.email = self.cleaned_data.get("email", "")
         if commit:
             user.save()
-            VolunteerProfile, _ = VolunteerProfile.objects.get_or_create(user=user)
-            VolunteerProfile.phone = self.cleaned_data["phone"]
-            VolunteerProfile.email = self.cleaned_data["email"]
-            VolunteerProfile.group = self.cleaned_data["group"]
-            VolunteerProfile.save()
+            profile, _ = VolunteerProfile.objects.get_or_create(user=user)
+            profile.phone = self.cleaned_data["phone"]
+            profile.email = self.cleaned_data["email"]
+            profile.group = self.cleaned_data["group"]
+            profile.save()
         return user

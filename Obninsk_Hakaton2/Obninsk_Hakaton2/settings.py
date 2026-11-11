@@ -94,6 +94,9 @@ DATABASES = {
         "PASSWORD": "PostgresPass123",
         "HOST": "127.0.0.1",
         "PORT": "5432",
+        "OPTIONS": {
+            "connect_timeout": 5, 
+        },
     }
 }
 

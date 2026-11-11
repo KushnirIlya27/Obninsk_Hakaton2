@@ -15,35 +15,40 @@ import AuthProvider from "./auth/AuthProvider";
 export default function App() {
   return (
     <AuthProvider>
-      <div className="app-shell">
-      <Routes>
-        <Route path="/" element={<WelcomePage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/coordinator" element={<CoordinatorPage />} />
-        <Route path="/volunteer" element={<VolunteerPage />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <VolunteerLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<VolunteerDashboard />} />
-          <Route path="rewards" element={<VolunteerRewards />} />
-          <Route path="profile" element={<VolunteerProfile />} />
-        </Route>
-        <Route
-          path="/coordinator-dashboard"
-          element={
-            <ProtectedRoute coordinator>
-              <CoordinatorDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-      <ThemeToggle />
+      {/* ИЗМЕНЕНО: добавлены relative и min-h-screen для правильного позиционирования */}
+      <div className="app-shell relative min-h-screen">
+        <Routes>
+          <Route path="/" element={<WelcomePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/coordinator" element={<CoordinatorPage />} />
+          <Route path="/volunteer" element={<VolunteerPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <VolunteerLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<VolunteerDashboard />} />
+            <Route path="rewards" element={<VolunteerRewards />} />
+            <Route path="profile" element={<VolunteerProfile />} />
+          </Route>
+          <Route
+            path="/coordinator-dashboard"
+            element={
+              <ProtectedRoute coordinator>
+                <CoordinatorDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        
+        {/* ИЗМЕНЕНО: Кнопка темы вынесена в fixed-контейнер, чтобы не влиять на высоту */}
+        <div className="fixed bottom-6 left-6 z-50">
+          <ThemeToggle />
+        </div>
       </div>
     </AuthProvider>
   );

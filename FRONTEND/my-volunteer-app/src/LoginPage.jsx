@@ -38,9 +38,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans">
+    // ИЗМЕНЕНО: добавлены md:h-screen и md:overflow-hidden
+    <div className="min-h-screen md:h-screen w-full flex flex-col md:flex-row font-sans md:overflow-hidden">
+      
       {/* ЛЕВАЯ ПАНЕЛЬ */}
-      <div className="w-full md:w-1/2 bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
+      {/* ИЗМЕНЕНО: добавлен md:h-full */}
+      <div className="w-full md:w-1/2 md:h-full bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
             <BrandLogo />
@@ -91,7 +94,8 @@ const LoginPage = () => {
       </div>
 
       {/* ПРАВАЯ ПАНЕЛЬ */}
-      <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-6 md:p-12">
+      {/* ИЗМЕНЕНО: добавлены md:h-full и md:overflow-y-auto */}
+      <div className="w-full md:w-1/2 bg-white flex items-center justify-center p-6 md:p-12 md:h-full md:overflow-y-auto">
         <div className="w-full max-w-md">
           <div className="mb-8">
             <h2 className="text-xs font-bold text-green-600 tracking-wider uppercase mb-2">

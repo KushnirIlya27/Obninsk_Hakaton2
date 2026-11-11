@@ -238,7 +238,7 @@ def rewards(request):
 
 @endpoint(["GET"])
 def me(request):
-    VolunteerProfile = VolunteerProfile.objects.filter(user=request.user).first()
+    # Делаем один запрос к базе
     profile = VolunteerProfile.objects.filter(user=request.user).first()
     return JsonResponse(
         {
@@ -246,8 +246,9 @@ def me(request):
             "username": request.user.username,
             "name": request.user.get_full_name(),
             "email": request.user.email,
-            "phone": (VolunteerProfile.phone or "") if VolunteerProfile else "",
-            "info": VolunteerProfile.group if VolunteerProfile else "",
+            # Используем переменную profile (с маленькой буквы)
+            "phone": (profile.phone or "") if profile else "",
+            "info": (profile.group or "") if profile else "",
             "can_issue": request.user.is_staff
             and request.user.has_perm("catalog.fulfill_redemption"),
             "can_manage_events": request.user.is_staff
