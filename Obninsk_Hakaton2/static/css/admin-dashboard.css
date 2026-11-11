@@ -1,0 +1,59 @@
+.volunteer-admin-hero {
+  margin-bottom: 24px;
+  padding: clamp(20px, 4vw, 42px);
+  border-radius: 18px;
+  background: linear-gradient(120deg, #122849, #125c65);
+  color: #fff;
+}
+
+.volunteer-admin-hero h1 {
+  margin: 10px 0;
+  color: inherit;
+  font-size: clamp(24px, 4vw, 38px);
+  font-weight: 700;
+}
+
+.volunteer-admin-hero p {
+  margin: 0;
+  color: #d4f3f2;
+}
+
+.volunteer-admin-hero .volunteer-admin-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.volunteer-admin-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.volunteer-admin-shortcuts:empty {
+  display: none;
+}
+
+.volunteer-admin-shortcuts a {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--hairline-color);
+  border-radius: 12px;
+  background: var(--darkened-bg);
+  color: var(--link-fg);
+  font-size: 15px;
+}
+
+.volunteer-admin-shortcuts a:hover,
+.volunteer-admin-shortcuts a:focus-visible {
+  border-color: var(--link-fg);
+  text-decoration: underline;
+}
+
+.volunteer-admin-shortcuts span {
+  color: var(--body-quiet-color);
+  font-size: 13px;
+}
