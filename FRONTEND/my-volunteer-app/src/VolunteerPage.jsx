@@ -11,15 +11,17 @@ const VolunteerPage = () => {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
-  const [info, setInfo] = useState("");
+  const [group, setGroup] = useState("");
   const [isAgreed, setIsAgreed] = useState(false);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
+
   const handlePhoneChange = (e) => {
     const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
     setPhone(digits);
     setErrors((previous) => ({ ...previous, phone: "" }));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validation = {};
@@ -31,6 +33,7 @@ const VolunteerPage = () => {
     if (!isAgreed) validation.terms = "Необходимо согласиться с правилами";
     setErrors(validation);
     if (Object.keys(validation).length) return;
+    
     setBusy(true);
     try {
       await register({
@@ -39,13 +42,13 @@ const VolunteerPage = () => {
         password1: password,
         password2: password,
         email,
-        info,
+        group,
       });
       navigate("/dashboard");
     } catch (error) {
       const fields = fieldMessages(error);
       setErrors({
-        general: [error.message, fields.email, fields.info]
+        general: [error.message, fields.email, fields.group]
           .filter(Boolean)
           .join(" "),
         login: fields.username,
@@ -58,9 +61,11 @@ const VolunteerPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans">
+    // ИЗМЕНЕНО: добавлены md:h-screen и md:overflow-hidden
+    <div className="min-h-screen md:h-screen w-full flex flex-col md:flex-row font-sans md:overflow-hidden">
       {/* ЛЕВАЯ ПАНЕЛЬ */}
-      <div className="w-full md:w-[45%] bg-[#14346b] text-white p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
+      {/* ИЗМЕНЕНО: добавлен md:h-full */}
+      <div className="w-full md:w-[45%] md:h-full bg-[#14346b] text-white p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
         {/* Логотип */}
         <div className="flex items-center gap-3 relative z-10">
           <BrandLogo />
@@ -110,7 +115,8 @@ const VolunteerPage = () => {
       </div>
 
       {/* ПРАВАЯ ПАНЕЛЬ */}
-      <div className="w-full md:w-[55%] bg-white flex flex-col items-center p-6 md:p-12 relative overflow-y-auto">
+      {/* ИЗМЕНЕНО: добавлен md:h-full */}
+      <div className="w-full md:w-[55%] md:h-full bg-white flex flex-col items-center p-6 md:p-12 relative overflow-y-auto">
         <div className="w-full max-w-xl my-auto">
           <button
             onClick={() => navigate("/")}
@@ -263,7 +269,7 @@ const VolunteerPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Сферы интересов
+                Название группы
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -277,16 +283,16 @@ const VolunteerPage = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       strokeWidth={2}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                     />
                   </svg>
                 </div>
                 <input
                   type="text"
-                  value={info}
+                  value={group}
                   maxLength="2000"
-                  onChange={(event) => setInfo(event.target.value)}
-                  placeholder="Экология, помощь животным, образование..."
+                  onChange={(event) => setGroup(event.target.value)}
+                  placeholder="Например: Экологический отряд"
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-all text-sm"
                 />
               </div>
@@ -333,7 +339,7 @@ const VolunteerPage = () => {
             <div className="flex items-start gap-3 mt-6">
               <input
                 type="checkbox"
-                id="terms-vol" // Для VolunteerPage замени на id="terms-vol"
+                id="terms-vol" 
                 checked={isAgreed}
                 onChange={(e) => {
                   setIsAgreed(e.target.checked);
@@ -347,8 +353,7 @@ const VolunteerPage = () => {
                   className="text-xs text-slate-500 leading-relaxed cursor-pointer"
                 >
                   {" "}
-                  {/* Для VolunteerPage замени на htmlFor="terms-vol" */}Я
-                  согласен с правилами сервиса и обработкой персональных данных
+                  Я согласен с правилами сервиса и обработкой персональных данных
                 </label>
                 {errors.terms && (
                   <p className="text-red-500 text-xs mt-1">{errors.terms}</p>

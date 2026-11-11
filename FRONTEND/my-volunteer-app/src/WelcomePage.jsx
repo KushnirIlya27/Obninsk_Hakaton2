@@ -7,9 +7,11 @@ const WelcomePage = () => {
   const navigate = useNavigate();
   const stats = useResource("stats/");
   return (
-    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans">
+    // ИЗМЕНЕНО: добавлены md:h-screen и md:overflow-hidden
+    <div className="min-h-screen md:h-screen w-full flex flex-col md:flex-row font-sans md:overflow-hidden">
       {/* ЛЕВАЯ ПАНЕЛЬ (Темно-синяя) */}
-      <div className="w-full md:w-1/2 bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
+      {/* ИЗМЕНЕНО: добавлен md:h-full */}
+      <div className="w-full md:w-1/2 md:h-full bg-[#14346b] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-between relative overflow-hidden">
         {/* Верхний блок с логотипом */}
         <div className="flex items-center gap-3 relative z-10">
           <BrandLogo />
@@ -79,7 +81,8 @@ const WelcomePage = () => {
       </div>
 
       {/* ПРАВАЯ ПАНЕЛЬ (Светлая) */}
-      <div className="w-full md:w-1/2 bg-slate-50 flex items-center justify-center p-6 md:p-12 relative">
+      {/* ИЗМЕНЕНО: добавлены md:h-full и md:overflow-y-auto */}
+      <div className="w-full md:w-1/2 md:h-full bg-slate-50 flex items-center justify-center p-6 md:p-12 relative md:overflow-y-auto">
         <div className="w-full max-w-md">
           <div className="flex justify-end mb-4">
             <Link
@@ -192,8 +195,6 @@ const WelcomePage = () => {
               </svg>
             </button>
           </div>
-
-
         </div>
 
         <FaqHelp />
