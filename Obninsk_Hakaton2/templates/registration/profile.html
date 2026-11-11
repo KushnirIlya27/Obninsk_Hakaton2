@@ -1,0 +1,17 @@
+{% extends 'volunteers/base.html' %}
+{% block title %}Мероприятия и мои добрые дела{% endblock %}
+{% block content %}
+<section class="intro"><div><p class="eyebrow">Личный кабинет волонтёра</p><h1>Выбирайте доброе дело</h1><p class="muted">Запишитесь на мероприятие, отправьте отчёт после участия и получите койны за подтверждённые часы.</p></div><div class="balance"><strong>{{ card.balance }}</strong><span>койнов на балансе</span><small>{{ card.confirmed_hours }} подтверждённых часов</small></div></section>
+<h2>Мероприятия</h2><div class="grid">
+{% for row in events %}<article class="card"><div class="tag">{{ row.event.coins_per_hour }} койнов / час</div><h3>{{ row.event.title }}</h3><p class="muted">{{ row.event.location }}</p><p>{{ row.event.starts_at|date:'d.m.Y H:i' }}{% if row.event.ends_at %} — {{ row.event.ends_at|date:'d.m.Y H:i' }}{% endif %}</p><p>{{ row.event.description|truncatewords:24 }}</p>{% if row.activity %}<p class="muted">{{ row.activity.get_status_display }} · ваша ставка {{ row.activity.rate_snapshot }} койнов/ч</p>{% endif %}<a class="button" href="{% url 'event_detail' row.event.pk %}">{% if row.activity %}Моё участие{% else %}Подробнее и записаться{% endif %}</a></article>{% empty %}<p class="muted">Пока нет открытых мероприятий. Координатор скоро добавит новые.</p>{% endfor %}
+</div>
+<section><h2>Мои участия и отчёты</h2><div class="stack">
+{% for activity in activities %}<article class="card"><div class="row"><h3><a href="{% url 'event_detail' activity.event_id %}">{{ activity.event.title }}</a></h3><span class="tag">{{ activity.get_status_display }}</span></div><p>Ставка при записи: <strong>{{ activity.rate_snapshot }} койнов/час</strong></p>
+{% if activity.status == 'approved' %}<p class="success-text">{{ activity.confirmed_hours }} ч. × {{ activity.rate_snapshot }} × {{ activity.multiplier }} = <strong>+{{ activity.coins_awarded }} койнов</strong></p>{% if activity.review_note %}<p>Комментарий: {{ activity.review_note }}</p>{% endif %}
+{% elif activity.status == 'rejected' %}<p>Причина отказа: {{ activity.review_note }}</p>
+{% elif activity.status == 'pending' %}<p>Заявлено {{ activity.requested_hours }} ч. Отчёт на проверке; баланс пока не изменён.</p>
+{% elif activity.can_submit_report %}<a class="button" href="{% url 'activity_report' activity.pk %}">Подать отчёт на получение койнов</a>
+{% else %}<p class="muted">Форма отчёта откроется {{ activity.event.report_available_at|date:'d.m.Y H:i' }}.</p>{% endif %}</article>{% empty %}<p class="muted">Вы пока не записались на мероприятия.</p>{% endfor %}
+</div></section>
+<section><h2>Последние операции</h2>{% for entry in history %}<div class="ledger"><strong>{% if entry.amount > 0 %}+{% endif %}{{ entry.amount }}</strong><span>{{ entry.description }}<small>{{ entry.created_at|date:'d.m.Y H:i' }}</small></span></div>{% empty %}<p class="muted">Здесь появится прозрачная история начислений и списаний.</p>{% endfor %}</section>
+{% endblock %}

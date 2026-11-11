@@ -1,0 +1,2658 @@
+diff --git a/.gitignore b/.gitignore
+index 6f596e1..c1a5907 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -218,3 +218,6 @@ __marimo__/
+ 
+ # Streamlit
+ .streamlit/secrets.toml
++
++# File-backed concurrency test database
++test_concurrency.sqlite3*
+diff --git a/Obninsk_Hakaton2/Obninsk_Hakaton2/settings.py b/Obninsk_Hakaton2/Obninsk_Hakaton2/settings.py
+index 73ea0a5..6ef3c90 100644
+--- a/Obninsk_Hakaton2/Obninsk_Hakaton2/settings.py
++++ b/Obninsk_Hakaton2/Obninsk_Hakaton2/settings.py
+@@ -10,7 +10,9 @@ For the full list of settings and their values, see
+ https://docs.djangoproject.com/en/6.0/ref/settings/
+ """
+ 
++import os
+ from pathlib import Path
++from django.core.exceptions import ImproperlyConfigured
+ 
+ # Build paths inside the project like this: BASE_DIR / 'subdir'.
+ BASE_DIR = Path(__file__).resolve().parent.parent
+@@ -20,62 +22,71 @@ BASE_DIR = Path(__file__).resolve().parent.parent
+ # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+ 
+ # SECURITY WARNING: keep the secret key used in production secret!
+-SECRET_KEY = 'django-insecure-qrjy_#!ua$y#hoo@ilwuidrxttx2zkn7(7t(_#3pe3y6-0k2g)'
++SECRET_KEY = os.environ.get(
++    "DJANGO_SECRET_KEY", "local-demo-only-change-before-deployment"
++)
+ 
+ # SECURITY WARNING: don't run with debug turned on in production!
+-DEBUG = True
++DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
++if not DEBUG and not os.environ.get("DJANGO_SECRET_KEY"):
++    raise ImproperlyConfigured("Set DJANGO_SECRET_KEY when DJANGO_DEBUG=0")
+ 
+-ALLOWED_HOSTS = []
++ALLOWED_HOSTS = os.environ.get(
++    "DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,[::1]"
++).split(",")
+ 
+ 
+ # Application definition
+ 
+ INSTALLED_APPS = [
+-    'django.contrib.admin',
+-    'django.contrib.auth',
+-    'django.contrib.contenttypes',
+-    'django.contrib.sessions',
+-    'django.contrib.messages',
+-    'django.contrib.staticfiles',
++    "django.contrib.admin",
++    "django.contrib.auth",
++    "django.contrib.contenttypes",
++    "django.contrib.sessions",
++    "django.contrib.messages",
++    "django.contrib.staticfiles",
++    "accounts",
++    "catalog",
+ ]
+ 
+ MIDDLEWARE = [
+-    'django.middleware.security.SecurityMiddleware',
+-    'django.contrib.sessions.middleware.SessionMiddleware',
+-    'django.middleware.common.CommonMiddleware',
+-    'django.middleware.csrf.CsrfViewMiddleware',
+-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+-    'django.contrib.messages.middleware.MessageMiddleware',
+-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
++    "django.middleware.security.SecurityMiddleware",
++    "django.contrib.sessions.middleware.SessionMiddleware",
++    "django.middleware.common.CommonMiddleware",
++    "django.middleware.csrf.CsrfViewMiddleware",
++    "django.contrib.auth.middleware.AuthenticationMiddleware",
++    "django.contrib.messages.middleware.MessageMiddleware",
++    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+ ]
+ 
+-ROOT_URLCONF = 'Obninsk_Hakaton2.urls'
++ROOT_URLCONF = "Obninsk_Hakaton2.urls"
+ 
+ TEMPLATES = [
+     {
+-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+-        'DIRS': [],
+-        'APP_DIRS': True,
+-        'OPTIONS': {
+-            'context_processors': [
+-                'django.template.context_processors.request',
+-                'django.contrib.auth.context_processors.auth',
+-                'django.contrib.messages.context_processors.messages',
++        "BACKEND": "django.template.backends.django.DjangoTemplates",
++        "DIRS": [],
++        "APP_DIRS": True,
++        "OPTIONS": {
++            "context_processors": [
++                "django.template.context_processors.request",
++                "django.contrib.auth.context_processors.auth",
++                "django.contrib.messages.context_processors.messages",
+             ],
+         },
+     },
+ ]
+ 
+-WSGI_APPLICATION = 'Obninsk_Hakaton2.wsgi.application'
++WSGI_APPLICATION = "Obninsk_Hakaton2.wsgi.application"
+ 
+ 
+ # Database
+ # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+ 
+ DATABASES = {
+-    'default': {
+-        'ENGINE': 'django.db.backends.sqlite3',
+-        'NAME': BASE_DIR / 'db.sqlite3',
++    "default": {
++        "ENGINE": "django.db.backends.sqlite3",
++        "NAME": BASE_DIR / "db.sqlite3",
++        "OPTIONS": {"timeout": 20, "transaction_mode": "IMMEDIATE"},
+     }
+ }
+ 
+@@ -85,16 +96,16 @@ DATABASES = {
+ 
+ AUTH_PASSWORD_VALIDATORS = [
+     {
+-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
++        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+     },
+     {
+-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
++        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+     },
+     {
+-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
++        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+     },
+     {
+-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
++        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+     },
+ ]
+ 
+@@ -102,9 +113,9 @@ AUTH_PASSWORD_VALIDATORS = [
+ # Internationalization
+ # https://docs.djangoproject.com/en/6.0/topics/i18n/
+ 
+-LANGUAGE_CODE = 'en-us'
++LANGUAGE_CODE = "ru-ru"
+ 
+-TIME_ZONE = 'UTC'
++TIME_ZONE = "Europe/Moscow"
+ 
+ USE_I18N = True
+ 
+@@ -114,4 +125,4 @@ USE_TZ = True
+ # Static files (CSS, JavaScript, Images)
+ # https://docs.djangoproject.com/en/6.0/howto/static-files/
+ 
+-STATIC_URL = 'static/'
++STATIC_URL = "static/"
+diff --git a/Obninsk_Hakaton2/Obninsk_Hakaton2/test_settings.py b/Obninsk_Hakaton2/Obninsk_Hakaton2/test_settings.py
+new file mode 100644
+index 0000000..d8c2746
+--- /dev/null
++++ b/Obninsk_Hakaton2/Obninsk_Hakaton2/test_settings.py
+@@ -0,0 +1,5 @@
++"""File-backed SQLite is required for meaningful concurrent transaction tests."""
++
++from .settings import *  # noqa: F403
++
++DATABASES["default"]["TEST"] = {"NAME": BASE_DIR / "test_concurrency.sqlite3"}
+diff --git a/Obninsk_Hakaton2/Obninsk_Hakaton2/urls.py b/Obninsk_Hakaton2/Obninsk_Hakaton2/urls.py
+index 4f67068..8f5b1d6 100644
+--- a/Obninsk_Hakaton2/Obninsk_Hakaton2/urls.py
++++ b/Obninsk_Hakaton2/Obninsk_Hakaton2/urls.py
+@@ -14,9 +14,11 @@ Including another URLconf
+     1. Import the include() function: from django.urls import include, path
+     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+ """
++
+ from django.contrib import admin
+-from django.urls import path
++from django.urls import include, path
+ 
+ urlpatterns = [
+-    path('admin/', admin.site.urls),
++    path("admin/", admin.site.urls),
++    path("api/", include("catalog.urls")),
+ ]
+diff --git a/Obninsk_Hakaton2/accounts/admin.py b/Obninsk_Hakaton2/accounts/admin.py
+index 8c38f3f..2c9b062 100644
+--- a/Obninsk_Hakaton2/accounts/admin.py
++++ b/Obninsk_Hakaton2/accounts/admin.py
+@@ -1,3 +1,17 @@
+ from django.contrib import admin
+ 
+-# Register your models here.
++from .models import VolunteerProfile
++
++
++@admin.register(VolunteerProfile)
++class VolunteerProfileAdmin(admin.ModelAdmin):
++    list_display = ["user", "balance", "confirmed_hours"]
++    search_fields = ["user__username", "user__first_name", "user__last_name"]
++    readonly_fields = ["user", "balance", "confirmed_hours"]
++    list_select_related = ["user"]
++
++    def has_add_permission(self, request):
++        return False
++
++    def has_delete_permission(self, request, obj=None):
++        return False
+diff --git a/Obninsk_Hakaton2/accounts/apps.py b/Obninsk_Hakaton2/accounts/apps.py
+index 9b3fc5a..a453a67 100644
+--- a/Obninsk_Hakaton2/accounts/apps.py
++++ b/Obninsk_Hakaton2/accounts/apps.py
+@@ -2,4 +2,5 @@ from django.apps import AppConfig
+ 
+ 
+ class AccountsConfig(AppConfig):
+-    name = 'accounts'
++    name = "accounts"
++    verbose_name = "Волонтёры"
+diff --git a/Obninsk_Hakaton2/accounts/migrations/0001_initial.py b/Obninsk_Hakaton2/accounts/migrations/0001_initial.py
+new file mode 100644
+index 0000000..b876325
+--- /dev/null
++++ b/Obninsk_Hakaton2/accounts/migrations/0001_initial.py
+@@ -0,0 +1,64 @@
++# Generated by Django 6.0.9 on 2026-10-16 13:02
++
++import django.db.models.deletion
++from django.conf import settings
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    initial = True
++
++    dependencies = [
++        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
++    ]
++
++    operations = [
++        migrations.CreateModel(
++            name="VolunteerProfile",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                (
++                    "balance",
++                    models.PositiveIntegerField(
++                        default=0, editable=False, verbose_name="Баланс койнов"
++                    ),
++                ),
++                (
++                    "confirmed_hours",
++                    models.DecimalField(
++                        decimal_places=1,
++                        default=0,
++                        editable=False,
++                        max_digits=10,
++                        verbose_name="Подтверждённые часы",
++                    ),
++                ),
++                (
++                    "user",
++                    models.OneToOneField(
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Пользователь",
++                    ),
++                ),
++            ],
++            options={
++                "verbose_name": "Карточка волонтёра",
++                "verbose_name_plural": "Карточки волонтёров",
++                "constraints": [
++                    models.CheckConstraint(
++                        condition=models.Q(("confirmed_hours__gte", 0)),
++                        name="profile_hours_nonnegative",
++                    )
++                ],
++            },
++        ),
++    ]
+diff --git a/Obninsk_Hakaton2/accounts/models.py b/Obninsk_Hakaton2/accounts/models.py
+index 71a8362..a19b0e7 100644
+--- a/Obninsk_Hakaton2/accounts/models.py
++++ b/Obninsk_Hakaton2/accounts/models.py
+@@ -1,3 +1,29 @@
++from django.conf import settings
+ from django.db import models
+ 
+-# Create your models here.
++
++class VolunteerProfile(models.Model):
++    user = models.OneToOneField(
++        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Пользователь"
++    )
++    balance = models.PositiveIntegerField("Баланс койнов", default=0, editable=False)
++    confirmed_hours = models.DecimalField(
++        "Подтверждённые часы",
++        max_digits=10,
++        decimal_places=1,
++        default=0,
++        editable=False,
++    )
++
++    class Meta:
++        verbose_name = "Карточка волонтёра"
++        verbose_name_plural = "Карточки волонтёров"
++        constraints = [
++            models.CheckConstraint(
++                condition=models.Q(confirmed_hours__gte=0),
++                name="profile_hours_nonnegative",
++            )
++        ]
++
++    def __str__(self):
++        return self.user.get_full_name() or self.user.get_username()
+diff --git a/Obninsk_Hakaton2/catalog/admin.py b/Obninsk_Hakaton2/catalog/admin.py
+index 8c38f3f..1f55a45 100644
+--- a/Obninsk_Hakaton2/catalog/admin.py
++++ b/Obninsk_Hakaton2/catalog/admin.py
+@@ -1,3 +1,187 @@
+-from django.contrib import admin
++from django.contrib import admin, messages
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.http import Http404, HttpResponseRedirect
++from django.template.response import TemplateResponse
++from django.urls import path, reverse
++from django.utils.html import format_html
+ 
+-# Register your models here.
++from .forms import ReviewForm
++from .models import Activity, CoinTransaction, Event, Redemption, Reward
++from .services import issue_reward, require_coordinator, review_activity
++
++admin.site.site_header = "Цифровой волонтёр Обнинска"
++admin.site.site_title = "Панель координатора"
++admin.site.index_title = "Учёт добрых дел · учебная система"
++
++
++class ReadOnlyAdmin(admin.ModelAdmin):
++    def has_add_permission(self, request):
++        return False
++
++    def has_delete_permission(self, request, obj=None):
++        return False
++
++    def get_readonly_fields(self, request, obj=None):
++        return [field.name for field in self.model._meta.fields]
++
++
++@admin.register(Event)
++class EventAdmin(admin.ModelAdmin):
++    list_display = ["title", "starts_at", "location", "is_active"]
++    search_fields = ["title", "location"]
++    list_filter = ["is_active", "starts_at"]
++
++
++@admin.register(Reward)
++class RewardAdmin(admin.ModelAdmin):
++    list_display = ["title", "price", "is_active"]
++    list_filter = ["is_active"]
++    search_fields = ["title"]
++
++
++@admin.register(Activity)
++class ActivityAdmin(ReadOnlyAdmin):
++    list_display = [
++        "id",
++        "volunteer",
++        "event",
++        "requested_hours",
++        "confirmed_hours",
++        "status",
++        "reviewed_by",
++        "review_link",
++    ]
++    list_filter = ["status", "event"]
++    search_fields = [
++        "volunteer__username",
++        "volunteer__first_name",
++        "volunteer__last_name",
++        "event__title",
++    ]
++    list_select_related = ["volunteer", "event", "reviewed_by"]
++    readonly_fields = [
++        "status",
++        "confirmed_hours",
++        "reviewed_by",
++        "reviewed_at",
++        "review_note",
++        "created_at",
++    ]
++
++    def has_add_permission(self, request):
++        return request.user.has_perm("catalog.add_activity")
++
++    def get_readonly_fields(self, request, obj=None):
++        if obj:
++            return [*super().get_readonly_fields(request, obj), "review_link"]
++        return self.readonly_fields
++
++    @admin.display(description="Проверка")
++    def review_link(self, obj):
++        if obj.status != Activity.Status.PENDING:
++            return "Рассмотрена"
++        return format_html(
++            '<a href="{}">Проверить часы</a>',
++            reverse("admin:catalog_activity_review", args=[obj.pk]),
++        )
++
++    def get_urls(self):
++        return [
++            path(
++                "<int:object_id>/review/",
++                self.admin_site.admin_view(self.review_view),
++                name="catalog_activity_review",
++            )
++        ] + super().get_urls()
++
++    def review_view(self, request, object_id):
++        require_coordinator(request.user, "review_activity")
++        obj = self.get_object(request, object_id)
++        if obj is None:
++            raise Http404
++        if not self.has_view_or_change_permission(request, obj):
++            raise PermissionDenied
++        form = ReviewForm(
++            request.POST if request.method == "POST" else None,
++            initial={"hours": obj.requested_hours},
++        )
++        if request.method == "POST" and form.is_valid():
++            try:
++                result = review_activity(
++                    coordinator=request.user, activity_id=obj.pk, **form.cleaned_data
++                )
++            except ValidationError as exc:
++                form.add_error(None, exc)
++            else:
++                self.log_change(
++                    request,
++                    result,
++                    f"{result.get_status_display()}; часы: {result.confirmed_hours}; {result.review_note}",
++                )
++                self.message_user(
++                    request,
++                    f"Заявка №{obj.pk}: {result.get_status_display()}.",
++                    messages.SUCCESS,
++                )
++                return HttpResponseRedirect(
++                    reverse("admin:catalog_activity_changelist")
++                )
++        return TemplateResponse(
++            request,
++            "admin/catalog/activity/review.html",
++            {
++                **self.admin_site.each_context(request),
++                "opts": self.model._meta,
++                "original": obj,
++                "title": f"Проверка заявки №{obj.pk}",
++                "form": form,
++                "already_reviewed": obj.status != Activity.Status.PENDING,
++            },
++        )
++
++
++@admin.register(CoinTransaction)
++class CoinTransactionAdmin(ReadOnlyAdmin):
++    list_display = ["id", "volunteer", "amount", "description", "created_at"]
++    search_fields = ["volunteer__username", "description"]
++    list_filter = ["created_at"]
++    list_select_related = ["volunteer"]
++
++
++@admin.register(Redemption)
++class RedemptionAdmin(ReadOnlyAdmin):
++    list_display = [
++        "id",
++        "volunteer",
++        "reward",
++        "price",
++        "status",
++        "created_at",
++        "issued_by",
++    ]
++    list_filter = ["status", "reward"]
++    search_fields = ["volunteer__username", "reward__title"]
++    list_select_related = ["volunteer", "reward", "issued_by"]
++    actions = ["mark_issued"]
++
++    def has_fulfill_permission(self, request):
++        return request.user.has_perm("catalog.fulfill_redemption")
++
++    @admin.action(
++        description="Отметить условную выдачу поощрения", permissions=["fulfill"]
++    )
++    def mark_issued(self, request, queryset):
++        for obj in queryset:
++            try:
++                result = issue_reward(coordinator=request.user, redemption_id=obj.pk)
++            except ValidationError as exc:
++                self.message_user(
++                    request,
++                    f"Запрос №{obj.pk}: {'; '.join(exc.messages)}",
++                    messages.WARNING,
++                )
++            else:
++                self.log_change(request, result, "Отмечена условная выдача поощрения")
++                self.message_user(
++                    request, f"Запрос №{obj.pk}: условно выдано.", messages.SUCCESS
++                )
+diff --git a/Obninsk_Hakaton2/catalog/apps.py b/Obninsk_Hakaton2/catalog/apps.py
+index ac42aa1..7c1d5c0 100644
+--- a/Obninsk_Hakaton2/catalog/apps.py
++++ b/Obninsk_Hakaton2/catalog/apps.py
+@@ -2,4 +2,5 @@ from django.apps import AppConfig
+ 
+ 
+ class CatalogConfig(AppConfig):
+-    name = 'catalog'
++    name = "catalog"
++    verbose_name = "Мероприятия, часы и поощрения"
+diff --git a/Obninsk_Hakaton2/catalog/forms.py b/Obninsk_Hakaton2/catalog/forms.py
+new file mode 100644
+index 0000000..ffe92f3
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/forms.py
+@@ -0,0 +1,39 @@
++from django import forms
++
++from .models import Activity
++
++
++class ReviewForm(forms.Form):
++    decision = forms.ChoiceField(
++        label="Решение",
++        choices=[
++            (Activity.Status.APPROVED, "Подтвердить часы"),
++            (Activity.Status.REJECTED, "Отклонить заявку"),
++        ],
++    )
++    hours = forms.DecimalField(
++        label="Подтверждённые часы",
++        max_digits=3,
++        decimal_places=1,
++        min_value=0.1,
++        max_value=24,
++        required=False,
++        help_text="1 час = 10 койнов. Например, 3 часа = 30 койнов.",
++    )
++    note = forms.CharField(
++        label="Комментарий", widget=forms.Textarea(attrs={"rows": 3}), required=False
++    )
++
++    def clean(self):
++        data = super().clean()
++        if (
++            data.get("decision") == Activity.Status.APPROVED
++            and data.get("hours") is None
++        ):
++            self.add_error("hours", "Для подтверждения укажите часы.")
++        if (
++            data.get("decision") == Activity.Status.REJECTED
++            and not data.get("note", "").strip()
++        ):
++            self.add_error("note", "Укажите причину отклонения.")
++        return data
+diff --git a/Obninsk_Hakaton2/catalog/management/__init__.py b/Obninsk_Hakaton2/catalog/management/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/Obninsk_Hakaton2/catalog/management/commands/__init__.py b/Obninsk_Hakaton2/catalog/management/commands/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/Obninsk_Hakaton2/catalog/management/commands/demo_scenario.py b/Obninsk_Hakaton2/catalog/management/commands/demo_scenario.py
+new file mode 100644
+index 0000000..fcdd918
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/management/commands/demo_scenario.py
+@@ -0,0 +1,71 @@
++from uuid import uuid4
++
++from accounts.models import VolunteerProfile
++from django.contrib.auth import get_user_model
++from django.core.management import call_command
++from django.core.management.base import BaseCommand
++from django.db import transaction
++
++from catalog.models import CoinTransaction, Event, Reward
++from catalog.services import (
++    Conflict,
++    apply_to_event,
++    purchase_reward,
++    review_activity,
++    submit_hours,
++)
++
++
++class Command(BaseCommand):
++    help = "Показать сценарий 3 ч. → +30 → −20 → 10 и запрет повторного начисления. Создаёт нового учебного волонтёра."
++
++    @transaction.atomic
++    def handle(self, *args, **options):
++        call_command("seed_demo", stdout=self.stdout)
++        coordinator = get_user_model().objects.get(username="coordinator")
++        volunteer = get_user_model().objects.create_user(
++            username=f"demo_{uuid4().hex[:10]}", first_name="Учебный участник защиты"
++        )
++        event = Event.objects.filter(is_active=True).first()
++        reward = Reward.objects.get(title="Учебный значок")
++        if reward.price != 20 or not reward.is_active or event is None:
++            from django.core.management.base import CommandError
++
++            raise CommandError(
++                "Для сценария нужны активное мероприятие и активный «Учебный значок» за 20 койнов."
++            )
++        activity, _ = apply_to_event(volunteer=volunteer, event_id=event.pk)
++        submit_hours(volunteer=volunteer, activity_id=activity.pk, hours=3)
++        self.stdout.write(
++            f"{volunteer.username}: заявка №{activity.pk}, заявлено 3 часа; баланс 0."
++        )
++        review_activity(
++            coordinator=coordinator,
++            activity_id=activity.pk,
++            decision="approved",
++            hours=3,
++            note="Учебная демонстрация",
++        )
++        profile = VolunteerProfile.objects.get(user=volunteer)
++        self.stdout.write(
++            f"Координатор подтвердил {profile.confirmed_hours} ч.; баланс {profile.balance}."
++        )
++        purchase_reward(volunteer=volunteer, reward_id=reward.pk, request_key=uuid4())
++        profile.refresh_from_db()
++        self.stdout.write(f"Запрос на значок за 20 койнов; остаток {profile.balance}.")
++        try:
++            review_activity(
++                coordinator=coordinator,
++                activity_id=activity.pk,
++                decision="approved",
++                hours=3,
++            )
++        except Conflict as exc:
++            self.stdout.write(f"Повторное начисление заблокировано: {exc.messages[0]}")
++        for entry in CoinTransaction.objects.filter(volunteer=volunteer).order_by("id"):
++            self.stdout.write(str(entry))
++        self.stdout.write(
++            self.style.SUCCESS(
++                "Готово. Заявка, история и запрос на выдачу доступны в /admin/."
++            )
++        )
+diff --git a/Obninsk_Hakaton2/catalog/management/commands/seed_demo.py b/Obninsk_Hakaton2/catalog/management/commands/seed_demo.py
+new file mode 100644
+index 0000000..84d3f86
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/management/commands/seed_demo.py
+@@ -0,0 +1,91 @@
++from datetime import timedelta
++
++from accounts.models import VolunteerProfile
++from django.contrib.auth import get_user_model
++from django.contrib.auth.models import Group, Permission
++from django.core.management.base import BaseCommand
++from django.db import transaction
++from django.utils import timezone
++
++from catalog.models import Event, Reward
++
++
++class Command(BaseCommand):
++    help = "Создать учебные аккаунты, три мероприятия и три поощрения (без сброса существующих данных)."
++
++    @transaction.atomic
++    def handle(self, *args, **options):
++        group, _ = Group.objects.get_or_create(name="Координаторы")
++        allowed = {
++            "catalog": [
++                "view_event",
++                "add_event",
++                "change_event",
++                "view_activity",
++                "add_activity",
++                "change_activity",
++                "review_activity",
++                "view_reward",
++                "add_reward",
++                "change_reward",
++                "view_redemption",
++                "change_redemption",
++                "fulfill_redemption",
++                "view_cointransaction",
++            ],
++            "accounts": ["view_volunteerprofile"],
++        }
++        for app, codenames in allowed.items():
++            group.permissions.add(
++                *Permission.objects.filter(
++                    content_type__app_label=app, codename__in=codenames
++                )
++            )
++        for username, name, staff in [
++            ("coordinator", "Учебный координатор", True),
++            ("volunteer", "Учебный волонтёр", False),
++        ]:
++            user, created = get_user_model().objects.get_or_create(
++                username=username, defaults={"first_name": name, "is_staff": staff}
++            )
++            if created:
++                user.set_password("Demo-Obninsk-2026!")
++                user.save()
++                if staff:
++                    user.groups.add(group)
++                self.stdout.write(f"Создан {username}; пароль: Demo-Obninsk-2026!")
++            else:
++                self.stdout.write(
++                    f"{username} уже существует; пароль и права не изменены."
++                )
++            VolunteerProfile.objects.get_or_create(user=user)
++        for index, (title, location) in enumerate(
++            [
++                ("Уборка городского парка", "Городской парк Обнинска"),
++                ("Помощь учебному приюту", "Учебный волонтёрский центр"),
++                ("Сбор книг для библиотеки", "Учебная библиотека"),
++            ]
++        ):
++            Event.objects.get_or_create(
++                title=title,
++                defaults={
++                    "location": location,
++                    "starts_at": timezone.now() + timedelta(days=index + 1),
++                    "description": "Учебное мероприятие. Все данные демонстрационные.",
++                },
++            )
++        for title, price in [
++            ("Учебный значок", 20),
++            ("Учебный блокнот", 30),
++            ("Благодарственное письмо", 10),
++        ]:
++            Reward.objects.get_or_create(
++                title=title,
++                defaults={
++                    "price": price,
++                    "description": "Условное поощрение без реальной выдачи.",
++                },
++            )
++        self.stdout.write(
++            self.style.SUCCESS("Готово: /admin/ для координатора; /api/ для фронтенда.")
++        )
+diff --git a/Obninsk_Hakaton2/catalog/migrations/0001_initial.py b/Obninsk_Hakaton2/catalog/migrations/0001_initial.py
+new file mode 100644
+index 0000000..146a5e2
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/migrations/0001_initial.py
+@@ -0,0 +1,440 @@
++# Generated by Django 6.0.9 on 2026-10-16 13:02
++
++from decimal import Decimal
++
++import django.core.validators
++import django.db.models.deletion
++from django.conf import settings
++from django.db import migrations, models
++
++
++class Migration(migrations.Migration):
++    initial = True
++
++    dependencies = [
++        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
++    ]
++
++    operations = [
++        migrations.CreateModel(
++            name="Event",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                ("title", models.CharField(max_length=200, verbose_name="Название")),
++                ("description", models.TextField(blank=True, verbose_name="Описание")),
++                ("location", models.CharField(max_length=200, verbose_name="Место")),
++                ("starts_at", models.DateTimeField(verbose_name="Начало")),
++                (
++                    "is_active",
++                    models.BooleanField(default=True, verbose_name="Открыта запись"),
++                ),
++            ],
++            options={
++                "verbose_name": "Мероприятие",
++                "verbose_name_plural": "Мероприятия",
++                "ordering": ["starts_at", "id"],
++            },
++        ),
++        migrations.CreateModel(
++            name="Activity",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                (
++                    "requested_hours",
++                    models.DecimalField(
++                        blank=True,
++                        decimal_places=1,
++                        max_digits=3,
++                        null=True,
++                        validators=[
++                            django.core.validators.MinValueValidator(Decimal("0.1")),
++                            django.core.validators.MaxValueValidator(24),
++                        ],
++                        verbose_name="Заявленные часы",
++                    ),
++                ),
++                (
++                    "confirmed_hours",
++                    models.DecimalField(
++                        blank=True,
++                        decimal_places=1,
++                        editable=False,
++                        max_digits=3,
++                        null=True,
++                        verbose_name="Подтверждённые часы",
++                    ),
++                ),
++                (
++                    "status",
++                    models.CharField(
++                        choices=[
++                            ("pending", "Ожидает проверки"),
++                            ("approved", "Подтверждена"),
++                            ("rejected", "Отклонена"),
++                        ],
++                        db_index=True,
++                        default="pending",
++                        editable=False,
++                        max_length=12,
++                        verbose_name="Статус",
++                    ),
++                ),
++                (
++                    "reviewed_at",
++                    models.DateTimeField(
++                        blank=True,
++                        editable=False,
++                        null=True,
++                        verbose_name="Дата проверки",
++                    ),
++                ),
++                (
++                    "review_note",
++                    models.TextField(
++                        blank=True,
++                        editable=False,
++                        verbose_name="Комментарий координатора",
++                    ),
++                ),
++                (
++                    "created_at",
++                    models.DateTimeField(auto_now_add=True, verbose_name="Дата заявки"),
++                ),
++                (
++                    "reviewed_by",
++                    models.ForeignKey(
++                        blank=True,
++                        editable=False,
++                        null=True,
++                        on_delete=django.db.models.deletion.PROTECT,
++                        related_name="reviewed_activities",
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Проверил",
++                    ),
++                ),
++                (
++                    "volunteer",
++                    models.ForeignKey(
++                        on_delete=django.db.models.deletion.PROTECT,
++                        related_name="activities",
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Волонтёр",
++                    ),
++                ),
++                (
++                    "event",
++                    models.ForeignKey(
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to="catalog.event",
++                        verbose_name="Мероприятие",
++                    ),
++                ),
++            ],
++            options={
++                "verbose_name": "Заявка на участие",
++                "verbose_name_plural": "Заявки и подтверждение часов",
++                "ordering": ["-created_at", "-id"],
++                "permissions": [
++                    ("review_activity", "Может подтверждать и отклонять часы")
++                ],
++            },
++        ),
++        migrations.CreateModel(
++            name="Redemption",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                (
++                    "price",
++                    models.PositiveIntegerField(
++                        editable=False, verbose_name="Списано койнов"
++                    ),
++                ),
++                (
++                    "request_key",
++                    models.UUIDField(editable=False, verbose_name="Ключ запроса"),
++                ),
++                (
++                    "status",
++                    models.CharField(
++                        choices=[
++                            ("pending", "Ожидает выдачи"),
++                            ("issued", "Условно выдано"),
++                        ],
++                        default="pending",
++                        editable=False,
++                        max_length=12,
++                        verbose_name="Статус",
++                    ),
++                ),
++                (
++                    "created_at",
++                    models.DateTimeField(
++                        auto_now_add=True, verbose_name="Дата запроса"
++                    ),
++                ),
++                (
++                    "issued_at",
++                    models.DateTimeField(
++                        blank=True,
++                        editable=False,
++                        null=True,
++                        verbose_name="Дата выдачи",
++                    ),
++                ),
++                (
++                    "issued_by",
++                    models.ForeignKey(
++                        blank=True,
++                        editable=False,
++                        null=True,
++                        on_delete=django.db.models.deletion.PROTECT,
++                        related_name="issued_redemptions",
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Выдал",
++                    ),
++                ),
++                (
++                    "volunteer",
++                    models.ForeignKey(
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Волонтёр",
++                    ),
++                ),
++            ],
++            options={
++                "verbose_name": "Запрос на поощрение",
++                "verbose_name_plural": "Запросы на выдачу поощрений",
++                "ordering": ["-created_at", "-id"],
++                "permissions": [
++                    ("fulfill_redemption", "Может отмечать выдачу поощрения")
++                ],
++            },
++        ),
++        migrations.CreateModel(
++            name="CoinTransaction",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                ("amount", models.IntegerField(verbose_name="Изменение баланса")),
++                (
++                    "description",
++                    models.CharField(max_length=400, verbose_name="Основание"),
++                ),
++                (
++                    "created_at",
++                    models.DateTimeField(auto_now_add=True, verbose_name="Дата"),
++                ),
++                (
++                    "activity",
++                    models.OneToOneField(
++                        blank=True,
++                        null=True,
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to="catalog.activity",
++                        verbose_name="Подтверждённая заявка",
++                    ),
++                ),
++                (
++                    "volunteer",
++                    models.ForeignKey(
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to=settings.AUTH_USER_MODEL,
++                        verbose_name="Волонтёр",
++                    ),
++                ),
++                (
++                    "redemption",
++                    models.OneToOneField(
++                        blank=True,
++                        null=True,
++                        on_delete=django.db.models.deletion.PROTECT,
++                        to="catalog.redemption",
++                        verbose_name="Запрос на поощрение",
++                    ),
++                ),
++            ],
++            options={
++                "verbose_name": "Операция с койнами",
++                "verbose_name_plural": "История операций с койнами",
++                "ordering": ["-created_at", "-id"],
++            },
++        ),
++        migrations.CreateModel(
++            name="Reward",
++            fields=[
++                (
++                    "id",
++                    models.BigAutoField(
++                        auto_created=True,
++                        primary_key=True,
++                        serialize=False,
++                        verbose_name="ID",
++                    ),
++                ),
++                ("title", models.CharField(max_length=200, verbose_name="Название")),
++                ("description", models.TextField(blank=True, verbose_name="Описание")),
++                (
++                    "price",
++                    models.PositiveIntegerField(
++                        validators=[django.core.validators.MinValueValidator(1)],
++                        verbose_name="Цена в койнах",
++                    ),
++                ),
++                (
++                    "is_active",
++                    models.BooleanField(default=True, verbose_name="Доступна"),
++                ),
++            ],
++            options={
++                "verbose_name": "Учебное поощрение",
++                "verbose_name_plural": "Учебные поощрения",
++                "ordering": ["price", "id"],
++                "constraints": [
++                    models.CheckConstraint(
++                        condition=models.Q(("price__gt", 0)),
++                        name="reward_price_positive",
++                    )
++                ],
++            },
++        ),
++        migrations.AddField(
++            model_name="redemption",
++            name="reward",
++            field=models.ForeignKey(
++                on_delete=django.db.models.deletion.PROTECT,
++                to="catalog.reward",
++                verbose_name="Поощрение",
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="activity",
++            constraint=models.UniqueConstraint(
++                fields=("volunteer", "event"), name="one_activity_per_volunteer_event"
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="activity",
++            constraint=models.CheckConstraint(
++                condition=models.Q(
++                    ("requested_hours__isnull", True),
++                    models.Q(
++                        ("requested_hours__gte", Decimal("0.1")),
++                        ("requested_hours__lte", 24),
++                    ),
++                    _connector="OR",
++                ),
++                name="valid_requested_hours",
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="activity",
++            constraint=models.CheckConstraint(
++                condition=models.Q(
++                    models.Q(
++                        ("confirmed_hours__isnull", True),
++                        ("reviewed_at__isnull", True),
++                        ("reviewed_by__isnull", True),
++                        ("status", "pending"),
++                    ),
++                    models.Q(
++                        ("confirmed_hours__gte", Decimal("0.1")),
++                        ("confirmed_hours__isnull", False),
++                        ("confirmed_hours__lte", 24),
++                        ("reviewed_at__isnull", False),
++                        ("reviewed_by__isnull", False),
++                        ("status", "approved"),
++                    ),
++                    models.Q(
++                        ("confirmed_hours__isnull", True),
++                        ("reviewed_at__isnull", False),
++                        ("reviewed_by__isnull", False),
++                        ("status", "rejected"),
++                    ),
++                    _connector="OR",
++                ),
++                name="valid_activity_review",
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="cointransaction",
++            constraint=models.CheckConstraint(
++                condition=models.Q(
++                    models.Q(
++                        ("activity__isnull", False),
++                        ("amount__gt", 0),
++                        ("redemption__isnull", True),
++                    ),
++                    models.Q(
++                        ("activity__isnull", True),
++                        ("amount__lt", 0),
++                        ("redemption__isnull", False),
++                    ),
++                    _connector="OR",
++                ),
++                name="transaction_sign_and_source",
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="redemption",
++            constraint=models.UniqueConstraint(
++                fields=("volunteer", "request_key"), name="unique_purchase_request"
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="redemption",
++            constraint=models.CheckConstraint(
++                condition=models.Q(("price__gt", 0)), name="redemption_price_positive"
++            ),
++        ),
++        migrations.AddConstraint(
++            model_name="redemption",
++            constraint=models.CheckConstraint(
++                condition=models.Q(
++                    models.Q(
++                        ("issued_at__isnull", True),
++                        ("issued_by__isnull", True),
++                        ("status", "pending"),
++                    ),
++                    models.Q(
++                        ("issued_at__isnull", False),
++                        ("issued_by__isnull", False),
++                        ("status", "issued"),
++                    ),
++                    _connector="OR",
++                ),
++                name="valid_redemption_issue",
++            ),
++        ),
++    ]
+diff --git a/Obninsk_Hakaton2/catalog/models.py b/Obninsk_Hakaton2/catalog/models.py
+index 71a8362..95709a1 100644
+--- a/Obninsk_Hakaton2/catalog/models.py
++++ b/Obninsk_Hakaton2/catalog/models.py
+@@ -1,3 +1,249 @@
++from decimal import Decimal
++
++from django.conf import settings
++from django.core.validators import MaxValueValidator, MinValueValidator
+ from django.db import models
+ 
+-# Create your models here.
++
++class Event(models.Model):
++    title = models.CharField("Название", max_length=200)
++    description = models.TextField("Описание", blank=True)
++    location = models.CharField("Место", max_length=200)
++    starts_at = models.DateTimeField("Начало")
++    is_active = models.BooleanField("Открыта запись", default=True)
++
++    class Meta:
++        verbose_name = "Мероприятие"
++        verbose_name_plural = "Мероприятия"
++        ordering = ["starts_at", "id"]
++
++    def __str__(self):
++        return self.title
++
++
++class Activity(models.Model):
++    class Status(models.TextChoices):
++        PENDING = "pending", "Ожидает проверки"
++        APPROVED = "approved", "Подтверждена"
++        REJECTED = "rejected", "Отклонена"
++
++    volunteer = models.ForeignKey(
++        settings.AUTH_USER_MODEL,
++        on_delete=models.PROTECT,
++        related_name="activities",
++        verbose_name="Волонтёр",
++    )
++    event = models.ForeignKey(
++        Event, on_delete=models.PROTECT, verbose_name="Мероприятие"
++    )
++    requested_hours = models.DecimalField(
++        "Заявленные часы",
++        max_digits=3,
++        decimal_places=1,
++        null=True,
++        blank=True,
++        validators=[MinValueValidator(Decimal("0.1")), MaxValueValidator(24)],
++    )
++    confirmed_hours = models.DecimalField(
++        "Подтверждённые часы",
++        max_digits=3,
++        decimal_places=1,
++        null=True,
++        blank=True,
++        editable=False,
++    )
++    status = models.CharField(
++        "Статус",
++        max_length=12,
++        choices=Status.choices,
++        default=Status.PENDING,
++        editable=False,
++        db_index=True,
++    )
++    reviewed_by = models.ForeignKey(
++        settings.AUTH_USER_MODEL,
++        on_delete=models.PROTECT,
++        null=True,
++        blank=True,
++        related_name="reviewed_activities",
++        verbose_name="Проверил",
++        editable=False,
++    )
++    reviewed_at = models.DateTimeField(
++        "Дата проверки", null=True, blank=True, editable=False
++    )
++    review_note = models.TextField(
++        "Комментарий координатора", blank=True, editable=False
++    )
++    created_at = models.DateTimeField("Дата заявки", auto_now_add=True)
++
++    class Meta:
++        verbose_name = "Заявка на участие"
++        verbose_name_plural = "Заявки и подтверждение часов"
++        ordering = ["-created_at", "-id"]
++        permissions = [("review_activity", "Может подтверждать и отклонять часы")]
++        constraints = [
++            models.UniqueConstraint(
++                fields=["volunteer", "event"], name="one_activity_per_volunteer_event"
++            ),
++            models.CheckConstraint(
++                condition=models.Q(requested_hours__isnull=True)
++                | models.Q(
++                    requested_hours__gte=Decimal("0.1"), requested_hours__lte=24
++                ),
++                name="valid_requested_hours",
++            ),
++            models.CheckConstraint(
++                condition=(
++                    models.Q(
++                        status="pending",
++                        confirmed_hours__isnull=True,
++                        reviewed_by__isnull=True,
++                        reviewed_at__isnull=True,
++                    )
++                    | models.Q(
++                        status="approved",
++                        confirmed_hours__isnull=False,
++                        confirmed_hours__gte=Decimal("0.1"),
++                        confirmed_hours__lte=24,
++                        reviewed_by__isnull=False,
++                        reviewed_at__isnull=False,
++                    )
++                    | models.Q(
++                        status="rejected",
++                        confirmed_hours__isnull=True,
++                        reviewed_by__isnull=False,
++                        reviewed_at__isnull=False,
++                    )
++                ),
++                name="valid_activity_review",
++            ),
++        ]
++
++    def __str__(self):
++        return f"{self.volunteer} — {self.event}"
++
++
++class Reward(models.Model):
++    title = models.CharField("Название", max_length=200)
++    description = models.TextField("Описание", blank=True)
++    price = models.PositiveIntegerField(
++        "Цена в койнах", validators=[MinValueValidator(1)]
++    )
++    is_active = models.BooleanField("Доступна", default=True)
++
++    class Meta:
++        verbose_name = "Учебное поощрение"
++        verbose_name_plural = "Учебные поощрения"
++        ordering = ["price", "id"]
++        constraints = [
++            models.CheckConstraint(
++                condition=models.Q(price__gt=0), name="reward_price_positive"
++            )
++        ]
++
++    def __str__(self):
++        return f"{self.title} ({self.price} койнов)"
++
++
++class Redemption(models.Model):
++    class Status(models.TextChoices):
++        PENDING = "pending", "Ожидает выдачи"
++        ISSUED = "issued", "Условно выдано"
++
++    volunteer = models.ForeignKey(
++        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Волонтёр"
++    )
++    reward = models.ForeignKey(
++        Reward, on_delete=models.PROTECT, verbose_name="Поощрение"
++    )
++    price = models.PositiveIntegerField("Списано койнов", editable=False)
++    request_key = models.UUIDField("Ключ запроса", editable=False)
++    status = models.CharField(
++        "Статус",
++        max_length=12,
++        choices=Status.choices,
++        default=Status.PENDING,
++        editable=False,
++    )
++    created_at = models.DateTimeField("Дата запроса", auto_now_add=True)
++    issued_by = models.ForeignKey(
++        settings.AUTH_USER_MODEL,
++        on_delete=models.PROTECT,
++        null=True,
++        blank=True,
++        related_name="issued_redemptions",
++        verbose_name="Выдал",
++        editable=False,
++    )
++    issued_at = models.DateTimeField(
++        "Дата выдачи", null=True, blank=True, editable=False
++    )
++
++    class Meta:
++        verbose_name = "Запрос на поощрение"
++        verbose_name_plural = "Запросы на выдачу поощрений"
++        ordering = ["-created_at", "-id"]
++        permissions = [("fulfill_redemption", "Может отмечать выдачу поощрения")]
++        constraints = [
++            models.UniqueConstraint(
++                fields=["volunteer", "request_key"], name="unique_purchase_request"
++            ),
++            models.CheckConstraint(
++                condition=models.Q(price__gt=0), name="redemption_price_positive"
++            ),
++            models.CheckConstraint(
++                condition=models.Q(
++                    status="pending", issued_by__isnull=True, issued_at__isnull=True
++                )
++                | models.Q(
++                    status="issued", issued_by__isnull=False, issued_at__isnull=False
++                ),
++                name="valid_redemption_issue",
++            ),
++        ]
++
++    def __str__(self):
++        return f"Запрос №{self.pk}: {self.volunteer} — {self.reward}"
++
++
++class CoinTransaction(models.Model):
++    volunteer = models.ForeignKey(
++        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, verbose_name="Волонтёр"
++    )
++    amount = models.IntegerField("Изменение баланса")
++    description = models.CharField("Основание", max_length=400)
++    activity = models.OneToOneField(
++        Activity,
++        on_delete=models.PROTECT,
++        null=True,
++        blank=True,
++        verbose_name="Подтверждённая заявка",
++    )
++    redemption = models.OneToOneField(
++        Redemption,
++        on_delete=models.PROTECT,
++        null=True,
++        blank=True,
++        verbose_name="Запрос на поощрение",
++    )
++    created_at = models.DateTimeField("Дата", auto_now_add=True)
++
++    class Meta:
++        verbose_name = "Операция с койнами"
++        verbose_name_plural = "История операций с койнами"
++        ordering = ["-created_at", "-id"]
++        constraints = [
++            models.CheckConstraint(
++                condition=models.Q(
++                    amount__gt=0, activity__isnull=False, redemption__isnull=True
++                )
++                | models.Q(
++                    amount__lt=0, activity__isnull=True, redemption__isnull=False
++                ),
++                name="transaction_sign_and_source",
++            )
++        ]
++
++    def __str__(self):
++        return f"{self.amount:+d} койнов — {self.description}"
+diff --git a/Obninsk_Hakaton2/catalog/services.py b/Obninsk_Hakaton2/catalog/services.py
+new file mode 100644
+index 0000000..5bf4f2d
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/services.py
+@@ -0,0 +1,164 @@
++"""All balance changes go through these transactional business operations."""
++
++from decimal import Decimal, InvalidOperation
++from uuid import UUID
++
++from accounts.models import VolunteerProfile
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.db import transaction
++from django.db.models import F
++from django.utils import timezone
++
++from .models import Activity, CoinTransaction, Event, Redemption, Reward
++
++COINS_PER_HOUR = 10
++
++
++class Conflict(ValidationError):
++    pass
++
++
++def require_user(user):
++    if not user.is_authenticated or not user.is_active:
++        raise PermissionDenied("Требуется активная учётная запись.")
++
++
++def require_coordinator(user, permission):
++    require_user(user)
++    if not user.is_staff or not user.has_perm(f"catalog.{permission}"):
++        raise PermissionDenied("Недостаточно прав координатора.")
++
++
++def validate_hours(value):
++    try:
++        hours = Decimal(str(value))
++    except (InvalidOperation, ValueError, TypeError):
++        raise ValidationError("Введите число часов от 0.1 до 24 с шагом 0.1.")
++    if (
++        not hours.is_finite()
++        or not Decimal("0.1") <= hours <= 24
++        or hours * 10 != (hours * 10).to_integral_value()
++    ):
++        raise ValidationError("Часы должны быть от 0.1 до 24 с шагом 0.1.")
++    return hours
++
++
++@transaction.atomic
++def apply_to_event(*, volunteer, event_id):
++    require_user(volunteer)
++    event = Event.objects.select_for_update().get(pk=event_id)
++    if not event.is_active:
++        raise Conflict("Запись на мероприятие закрыта.")
++    activity, created = Activity.objects.get_or_create(volunteer=volunteer, event=event)
++    VolunteerProfile.objects.get_or_create(user=volunteer)
++    return activity, created
++
++
++@transaction.atomic
++def submit_hours(*, volunteer, activity_id, hours):
++    require_user(volunteer)
++    hours = validate_hours(hours)
++    activity = Activity.objects.select_for_update().get(
++        pk=activity_id, volunteer=volunteer
++    )
++    if activity.status != Activity.Status.PENDING:
++        raise Conflict("Заявка уже рассмотрена; изменить часы нельзя.")
++    activity.requested_hours = hours
++    activity.save(update_fields=["requested_hours"])
++    return activity
++
++
++@transaction.atomic
++def review_activity(*, coordinator, activity_id, decision, hours=None, note=""):
++    require_coordinator(coordinator, "review_activity")
++    if decision not in (Activity.Status.APPROVED, Activity.Status.REJECTED):
++        raise ValidationError("Выберите подтверждение или отклонение.")
++    activity = (
++        Activity.objects.select_for_update().select_related("event").get(pk=activity_id)
++    )
++    if activity.status != Activity.Status.PENDING:
++        raise Conflict("Заявка уже рассмотрена. Повторное начисление запрещено.")
++    if activity.volunteer_id == coordinator.pk:
++        raise PermissionDenied("Свою заявку должен проверить другой координатор.")
++    if decision == Activity.Status.REJECTED and not note.strip():
++        raise ValidationError("Укажите причину отклонения.")
++    confirmed = validate_hours(hours) if decision == Activity.Status.APPROVED else None
++    changed = Activity.objects.filter(
++        pk=activity.pk, status=Activity.Status.PENDING
++    ).update(
++        status=decision,
++        confirmed_hours=confirmed,
++        reviewed_by=coordinator,
++        reviewed_at=timezone.now(),
++        review_note=note.strip(),
++    )
++    if changed != 1:
++        raise Conflict("Заявка уже рассмотрена.")
++    if confirmed is not None:
++        coins = int(confirmed * COINS_PER_HOUR)
++        profile, _ = VolunteerProfile.objects.get_or_create(
++            user_id=activity.volunteer_id
++        )
++        VolunteerProfile.objects.filter(pk=profile.pk).update(
++            balance=F("balance") + coins,
++            confirmed_hours=F("confirmed_hours") + confirmed,
++        )
++        CoinTransaction.objects.create(
++            volunteer_id=activity.volunteer_id,
++            amount=coins,
++            activity=activity,
++            description=f"{activity.event.title}: подтверждено {confirmed} ч. × {COINS_PER_HOUR}",
++        )
++    activity.refresh_from_db()
++    return activity
++
++
++@transaction.atomic
++def purchase_reward(*, volunteer, reward_id, request_key):
++    require_user(volunteer)
++    try:
++        key = UUID(str(request_key))
++    except (ValueError, TypeError, AttributeError):
++        raise ValidationError(
++            "request_key должен быть UUID; повтор запроса использует тот же ключ."
++        )
++    profile, _ = VolunteerProfile.objects.get_or_create(user=volunteer)
++    profile = VolunteerProfile.objects.select_for_update().get(pk=profile.pk)
++    previous = Redemption.objects.filter(volunteer=volunteer, request_key=key).first()
++    if previous:
++        if previous.reward_id != reward_id:
++            raise Conflict("Этот ключ уже использован для другого поощрения.")
++        return previous, False
++    reward = Reward.objects.select_for_update().get(pk=reward_id)
++    if not reward.is_active:
++        raise Conflict("Поощрение недоступно.")
++    if (
++        VolunteerProfile.objects.filter(
++            pk=profile.pk, balance__gte=reward.price
++        ).update(balance=F("balance") - reward.price)
++        != 1
++    ):
++        raise Conflict("Недостаточно койнов.")
++    redemption = Redemption.objects.create(
++        volunteer=volunteer, reward=reward, price=reward.price, request_key=key
++    )
++    CoinTransaction.objects.create(
++        volunteer=volunteer,
++        amount=-reward.price,
++        redemption=redemption,
++        description=f"Учебное поощрение: {reward.title}",
++    )
++    return redemption, True
++
++
++@transaction.atomic
++def issue_reward(*, coordinator, redemption_id):
++    require_coordinator(coordinator, "fulfill_redemption")
++    redemption = Redemption.objects.select_for_update().get(pk=redemption_id)
++    if redemption.status != Redemption.Status.PENDING:
++        raise Conflict("Поощрение уже отмечено как выданное.")
++    redemption.status = Redemption.Status.ISSUED
++    redemption.issued_by = coordinator
++    redemption.issued_at = timezone.now()
++    redemption.save(update_fields=["status", "issued_by", "issued_at"])
++    return redemption
+diff --git a/Obninsk_Hakaton2/catalog/templates/admin/catalog/activity/review.html b/Obninsk_Hakaton2/catalog/templates/admin/catalog/activity/review.html
+new file mode 100644
+index 0000000..957eb38
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/templates/admin/catalog/activity/review.html
+@@ -0,0 +1,15 @@
++{% extends "admin/base_site.html" %}
++{% block breadcrumbs %}<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Главная</a> › <a href="{% url 'admin:catalog_activity_changelist' %}">Заявки</a> › Проверка</div>{% endblock %}
++{% block content %}
++<div class="module aligned">
++  <h2>{{ original.event.title }}</h2>
++  <p>Волонтёр: <strong>{{ original.volunteer }}</strong></p>
++  <p>Заявлено часов: {{ original.requested_hours|default_if_none:"ещё не указаны" }}. Статус: {{ original.get_status_display }}.</p>
++  {% if already_reviewed %}<p><strong>Заявка уже рассмотрена. Повторное начисление запрещено.</strong></p>{% endif %}
++  <form method="post">{% csrf_token %}
++    {{ form.as_p }}
++    {% if not already_reviewed %}<div class="submit-row"><input type="submit" value="Сохранить решение" class="default"></div>{% endif %}
++  </form>
++  <p>Койны начисляются только после подтверждения. Это учебная система: койны не являются деньгами и не гарантируют настоящую награду.</p>
++</div>
++{% endblock %}
+diff --git a/Obninsk_Hakaton2/catalog/test_concurrency.py b/Obninsk_Hakaton2/catalog/test_concurrency.py
+new file mode 100644
+index 0000000..200a862
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/test_concurrency.py
+@@ -0,0 +1,88 @@
++from concurrent.futures import ThreadPoolExecutor
++from threading import Barrier
++from uuid import uuid4
++
++from accounts.models import VolunteerProfile
++from django.contrib.auth import get_user_model
++from django.contrib.auth.models import Permission
++from django.db import close_old_connections, connection
++from django.test import TransactionTestCase
++from django.utils import timezone
++
++from .models import CoinTransaction, Event, Redemption, Reward
++from .services import Conflict, apply_to_event, purchase_reward, review_activity
++
++
++class ConcurrentOperationsTests(TransactionTestCase):
++    def setUp(self):
++        if "memory" in str(connection.settings_dict["NAME"]):
++            self.skipTest(
++                "Run with --settings=Obninsk_Hakaton2.test_settings for file-backed SQLite."
++            )
++        User = get_user_model()
++        self.volunteer = User.objects.create_user("concurrent-volunteer")
++        self.coordinator = User.objects.create_user(
++            "concurrent-coordinator", is_staff=True
++        )
++        self.coordinator.user_permissions.add(
++            Permission.objects.get(codename="review_activity")
++        )
++        event = Event.objects.create(
++            title="Parallel test", location="Обнинск", starts_at=timezone.now()
++        )
++        self.activity, _ = apply_to_event(volunteer=self.volunteer, event_id=event.pk)
++        self.reward = Reward.objects.create(title="Значок", price=20)
++
++    def run_concurrently(self, operation):
++        barrier = Barrier(2)
++
++        def worker():
++            close_old_connections()
++            try:
++                barrier.wait(timeout=10)
++                operation()
++                return "success"
++            except Conflict:
++                return "conflict"
++            finally:
++                close_old_connections()
++
++        with ThreadPoolExecutor(max_workers=2) as pool:
++            futures = [pool.submit(worker) for _ in range(2)]
++            return [future.result(timeout=30) for future in futures]
++
++    def test_two_simultaneous_approvals_credit_once(self):
++        coordinator_id, activity_id = self.coordinator.pk, self.activity.pk
++
++        def approve():
++            review_activity(
++                coordinator=get_user_model().objects.get(pk=coordinator_id),
++                activity_id=activity_id,
++                decision="approved",
++                hours=3,
++            )
++
++        self.assertCountEqual(self.run_concurrently(approve), ["success", "conflict"])
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
++        self.assertEqual(CoinTransaction.objects.count(), 1)
++
++    def test_two_simultaneous_purchases_cannot_overspend(self):
++        review_activity(
++            coordinator=self.coordinator,
++            activity_id=self.activity.pk,
++            decision="approved",
++            hours=3,
++        )
++        volunteer_id, reward_id = self.volunteer.pk, self.reward.pk
++
++        def buy():
++            purchase_reward(
++                volunteer=get_user_model().objects.get(pk=volunteer_id),
++                reward_id=reward_id,
++                request_key=uuid4(),
++            )
++
++        self.assertCountEqual(self.run_concurrently(buy), ["success", "conflict"])
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 10)
++        self.assertEqual(Redemption.objects.count(), 1)
++        self.assertEqual(CoinTransaction.objects.count(), 2)
+diff --git a/Obninsk_Hakaton2/catalog/tests.py b/Obninsk_Hakaton2/catalog/tests.py
+index 7ce503c..9917be4 100644
+--- a/Obninsk_Hakaton2/catalog/tests.py
++++ b/Obninsk_Hakaton2/catalog/tests.py
+@@ -1,3 +1,369 @@
+-from django.test import TestCase
++from decimal import Decimal
++from unittest.mock import patch
++from uuid import uuid4
+ 
+-# Create your tests here.
++from accounts.models import VolunteerProfile
++from django.contrib.auth import get_user_model
++from django.contrib.auth.models import Permission
++from django.core.exceptions import PermissionDenied, ValidationError
++from django.db import IntegrityError, transaction
++from django.test import Client, TestCase
++from django.urls import reverse
++from django.utils import timezone
++
++from .models import CoinTransaction, Event, Redemption, Reward
++from .services import (
++    Conflict,
++    apply_to_event,
++    issue_reward,
++    purchase_reward,
++    review_activity,
++    submit_hours,
++)
++
++
++class VolunteerTests(TestCase):
++    @classmethod
++    def setUpTestData(cls):
++        User = get_user_model()
++        cls.volunteer = User.objects.create_user("volunteer", password="test-password")
++        cls.other = User.objects.create_user("other")
++        cls.coordinator = User.objects.create_user(
++            "coordinator", password="test-password", is_staff=True
++        )
++        cls.coordinator.user_permissions.add(
++            *Permission.objects.filter(
++                content_type__app_label="catalog",
++                codename__in=[
++                    "review_activity",
++                    "fulfill_redemption",
++                    "view_activity",
++                    "change_activity",
++                    "view_redemption",
++                    "change_redemption",
++                    "view_cointransaction",
++                ],
++            )
++        )
++        cls.event = Event.objects.create(
++            title="Уборка парка", location="Обнинск", starts_at=timezone.now()
++        )
++        cls.reward = Reward.objects.create(title="Значок", price=20)
++
++    def setUp(self):
++        self.activity, _ = apply_to_event(
++            volunteer=self.volunteer, event_id=self.event.pk
++        )
++
++    def approve(self):
++        return review_activity(
++            coordinator=self.coordinator,
++            activity_id=self.activity.pk,
++            decision="approved",
++            hours="3",
++        )
++
++    def test_full_scenario_and_duplicate_credit(self):
++        submit_hours(volunteer=self.volunteer, activity_id=self.activity.pk, hours=3)
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
++        self.approve()
++        profile = VolunteerProfile.objects.get(user=self.volunteer)
++        self.assertEqual((profile.balance, profile.confirmed_hours), (30, Decimal("3")))
++        redemption, created = purchase_reward(
++            volunteer=self.volunteer, reward_id=self.reward.pk, request_key=uuid4()
++        )
++        self.assertTrue(created)
++        profile.refresh_from_db()
++        self.assertEqual(profile.balance, 10)
++        self.assertEqual(
++            list(
++                CoinTransaction.objects.order_by("id").values_list("amount", flat=True)
++            ),
++            [30, -20],
++        )
++        with self.assertRaises(Conflict):
++            self.approve()
++        issue_reward(coordinator=self.coordinator, redemption_id=redemption.pk)
++        profile.refresh_from_db()
++        self.assertEqual(profile.balance, 10)
++        with self.assertRaises(Conflict):
++            issue_reward(coordinator=self.coordinator, redemption_id=redemption.pk)
++
++    def test_duplicate_application(self):
++        obj, created = apply_to_event(volunteer=self.volunteer, event_id=self.event.pk)
++        self.assertFalse(created)
++        self.assertEqual(obj.pk, self.activity.pk)
++
++    def test_closed_event(self):
++        self.event.is_active = False
++        self.event.save()
++        with self.assertRaises(Conflict):
++            apply_to_event(volunteer=self.other, event_id=self.event.pk)
++
++    def test_no_credit_without_permission(self):
++        staff = get_user_model().objects.create_user("staff", is_staff=True)
++        for actor in [self.volunteer, staff]:
++            with self.assertRaises(PermissionDenied):
++                review_activity(
++                    coordinator=actor,
++                    activity_id=self.activity.pk,
++                    decision="approved",
++                    hours=3,
++                )
++        self.assertFalse(CoinTransaction.objects.exists())
++
++    def test_self_review(self):
++        activity, _ = apply_to_event(volunteer=self.coordinator, event_id=self.event.pk)
++        with self.assertRaises(PermissionDenied):
++            review_activity(
++                coordinator=self.coordinator,
++                activity_id=activity.pk,
++                decision="approved",
++                hours=3,
++            )
++
++    def test_rejection(self):
++        with self.assertRaises(ValidationError):
++            review_activity(
++                coordinator=self.coordinator,
++                activity_id=self.activity.pk,
++                decision="rejected",
++            )
++        review_activity(
++            coordinator=self.coordinator,
++            activity_id=self.activity.pk,
++            decision="rejected",
++            note="Участие не подтверждено",
++        )
++        with self.assertRaises(Conflict):
++            self.approve()
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
++        self.assertFalse(CoinTransaction.objects.exists())
++
++    def test_hours_validation_and_fractional_credit(self):
++        for hours in [0, -1, 25, "NaN", "Infinity", "abc", None, "1.25", True]:
++            with self.subTest(hours=hours), self.assertRaises(ValidationError):
++                submit_hours(
++                    volunteer=self.volunteer, activity_id=self.activity.pk, hours=hours
++                )
++        review_activity(
++            coordinator=self.coordinator,
++            activity_id=self.activity.pk,
++            decision="approved",
++            hours="1.5",
++        )
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 15)
++
++    def test_insufficient_funds(self):
++        with self.assertRaises(Conflict):
++            purchase_reward(
++                volunteer=self.volunteer, reward_id=self.reward.pk, request_key=uuid4()
++            )
++        self.assertFalse(Redemption.objects.exists())
++        self.assertFalse(CoinTransaction.objects.exists())
++
++    def test_duplicate_purchase_and_price_snapshot(self):
++        self.approve()
++        key = uuid4()
++        first, _ = purchase_reward(
++            volunteer=self.volunteer, reward_id=self.reward.pk, request_key=key
++        )
++        self.reward.price = 40
++        self.reward.is_active = False
++        self.reward.save()
++        second, created = purchase_reward(
++            volunteer=self.volunteer, reward_id=self.reward.pk, request_key=key
++        )
++        self.assertFalse(created)
++        self.assertEqual((second.pk, second.price), (first.pk, 20))
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 10)
++        another = Reward.objects.create(title="Другое", price=1)
++        with self.assertRaises(Conflict):
++            purchase_reward(
++                volunteer=self.volunteer, reward_id=another.pk, request_key=key
++            )
++
++    def test_disabled_reward_and_invalid_key(self):
++        self.approve()
++        with self.assertRaises(ValidationError):
++            purchase_reward(
++                volunteer=self.volunteer, reward_id=self.reward.pk, request_key="bad"
++            )
++        self.reward.is_active = False
++        self.reward.save()
++        with self.assertRaises(Conflict):
++            purchase_reward(
++                volunteer=self.volunteer, reward_id=self.reward.pk, request_key=uuid4()
++            )
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
++
++    def test_approval_rollback(self):
++        with patch(
++            "catalog.services.CoinTransaction.objects.create",
++            side_effect=RuntimeError("storage failure"),
++        ):
++            with self.assertRaises(RuntimeError):
++                self.approve()
++        self.activity.refresh_from_db()
++        self.assertEqual(self.activity.status, "pending")
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 0)
++
++    def test_purchase_rollback(self):
++        self.approve()
++        with patch(
++            "catalog.services.CoinTransaction.objects.create",
++            side_effect=RuntimeError("storage failure"),
++        ):
++            with self.assertRaises(RuntimeError):
++                purchase_reward(
++                    volunteer=self.volunteer,
++                    reward_id=self.reward.pk,
++                    request_key=uuid4(),
++                )
++        self.assertFalse(Redemption.objects.exists())
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
++
++    def test_database_duplicate_ledger_source(self):
++        self.approve()
++        with self.assertRaises(IntegrityError), transaction.atomic():
++            CoinTransaction.objects.create(
++                volunteer=self.volunteer,
++                activity=self.activity,
++                amount=30,
++                description="Duplicate",
++            )
++
++    def test_api_ownership(self):
++        self.assertEqual(self.client.get("/api/me/").status_code, 401)
++        self.client.force_login(self.other)
++        response = self.client.post(
++            f"/api/activities/{self.activity.pk}/hours/",
++            {"hours": 3},
++            content_type="application/json",
++        )
++        self.assertEqual(response.status_code, 404)
++        self.assertEqual(self.client.get("/api/me/activities/").json()["results"], [])
++        self.assertEqual(
++            self.client.get("/api/coordinator/activities/").status_code, 403
++        )
++        self.assertEqual(
++            self.client.get("/api/coordinator/redemptions/").status_code, 403
++        )
++
++    def test_api_ignores_forged_price_and_user(self):
++        self.client.force_login(self.volunteer)
++        response = self.client.post(
++            f"/api/events/{self.event.pk}/apply/",
++            {"volunteer_id": self.other.pk, "balance": 999},
++            content_type="application/json",
++        )
++        self.assertEqual(response.json()["volunteer_id"], self.volunteer.pk)
++        self.approve()
++        response = self.client.post(
++            f"/api/rewards/{self.reward.pk}/purchase/",
++            {"request_key": str(uuid4()), "price": 1},
++            content_type="application/json",
++        )
++        self.assertEqual(response.status_code, 201)
++        self.assertEqual(response.json()["price"], 20)
++
++    def test_api_repeat_review_and_locked_hours(self):
++        self.client.force_login(self.coordinator)
++        url = f"/api/coordinator/activities/{self.activity.pk}/review/"
++        payload = {"decision": "approved", "hours": 3}
++        self.assertEqual(
++            self.client.post(url, payload, content_type="application/json").status_code,
++            200,
++        )
++        self.assertEqual(
++            self.client.post(url, payload, content_type="application/json").status_code,
++            409,
++        )
++        self.client.force_login(self.volunteer)
++        self.assertEqual(
++            self.client.post(
++                f"/api/activities/{self.activity.pk}/hours/",
++                {"hours": 5},
++                content_type="application/json",
++            ).status_code,
++            409,
++        )
++
++    def test_csrf_login_and_writes(self):
++        client = Client(enforce_csrf_checks=True)
++        payload = {"username": "volunteer", "password": "test-password"}
++        self.assertEqual(
++            client.post(
++                "/api/auth/login/", payload, content_type="application/json"
++            ).status_code,
++            403,
++        )
++        token = client.get("/api/auth/csrf/").json()["csrfToken"]
++        response = client.post(
++            "/api/auth/login/",
++            payload,
++            content_type="application/json",
++            HTTP_X_CSRFTOKEN=token,
++        )
++        self.assertEqual(response.status_code, 200)
++        self.assertEqual(client.get("/api/me/").status_code, 200)
++        self.assertEqual(
++            client.post(
++                f"/api/events/{self.event.pk}/apply/",
++                {},
++                content_type="application/json",
++            ).status_code,
++            403,
++        )
++        self.assertEqual(
++            client.post(
++                f"/api/events/{self.event.pk}/apply/",
++                {},
++                content_type="application/json",
++                HTTP_X_CSRFTOKEN=response.json()["csrfToken"],
++            ).status_code,
++            200,
++        )
++
++    def test_admin_review(self):
++        self.client.force_login(self.coordinator)
++        url = reverse("admin:catalog_activity_review", args=[self.activity.pk])
++        self.assertContains(self.client.get(url), "Проверка заявки")
++        response = self.client.post(
++            url, {"decision": "approved", "hours": 3, "note": "Проверено"}
++        )
++        self.assertRedirects(response, reverse("admin:catalog_activity_changelist"))
++        self.assertContains(self.client.get(url), "Повторное начисление запрещено")
++        self.assertContains(
++            self.client.post(url, {"decision": "approved", "hours": 3}),
++            "уже рассмотрена",
++        )
++        self.assertEqual(VolunteerProfile.objects.get(user=self.volunteer).balance, 30)
++
++    def test_admin_readonly_and_no_delete(self):
++        self.approve()
++        self.client.force_login(self.coordinator)
++        url = reverse("admin:catalog_activity_change", args=[self.activity.pk])
++        self.client.post(
++            url, {"status": "pending", "confirmed_hours": 20, "_save": "Save"}
++        )
++        self.activity.refresh_from_db()
++        self.assertEqual(self.activity.status, "approved")
++        self.assertEqual(self.activity.confirmed_hours, Decimal("3"))
++        self.assertEqual(
++            self.client.post(
++                reverse("admin:catalog_activity_delete", args=[self.activity.pk]),
++                {"post": "yes"},
++            ).status_code,
++            403,
++        )
++
++    def test_bad_json(self):
++        self.client.force_login(self.volunteer)
++        for payload in ["[]", "{broken", "{}"]:
++            response = self.client.post(
++                f"/api/activities/{self.activity.pk}/hours/",
++                payload,
++                content_type="application/json",
++            )
++            self.assertEqual(response.status_code, 400)
+diff --git a/Obninsk_Hakaton2/catalog/urls.py b/Obninsk_Hakaton2/catalog/urls.py
+new file mode 100644
+index 0000000..f72665a
+--- /dev/null
++++ b/Obninsk_Hakaton2/catalog/urls.py
+@@ -0,0 +1,22 @@
++from django.urls import path
++
++from . import views
++
++urlpatterns = [
++    path("auth/csrf/", views.csrf),
++    path("auth/login/", views.session_login),
++    path("auth/logout/", views.session_logout),
++    path("events/", views.events),
++    path("events/<int:event_id>/apply/", views.apply),
++    path("rewards/", views.rewards),
++    path("rewards/<int:reward_id>/purchase/", views.purchase),
++    path("me/", views.me),
++    path("me/activities/", views.my_activities),
++    path("me/transactions/", views.my_transactions),
++    path("me/redemptions/", views.my_redemptions),
++    path("activities/<int:activity_id>/hours/", views.hours),
++    path("coordinator/activities/", views.coordinator_activities),
++    path("coordinator/activities/<int:activity_id>/review/", views.review),
++    path("coordinator/redemptions/", views.coordinator_redemptions),
++    path("coordinator/redemptions/<int:redemption_id>/issue/", views.issue),
++]
+diff --git a/Obninsk_Hakaton2/catalog/views.py b/Obninsk_Hakaton2/catalog/views.py
+index 91ea44a..7458e62 100644
+--- a/Obninsk_Hakaton2/catalog/views.py
++++ b/Obninsk_Hakaton2/catalog/views.py
+@@ -1,3 +1,259 @@
+-from django.shortcuts import render
++import json
++from functools import wraps
+ 
+-# Create your views here.
++from accounts.models import VolunteerProfile
++from django.contrib.auth import authenticate, login, logout
++from django.core.exceptions import ObjectDoesNotExist, PermissionDenied, ValidationError
++from django.http import JsonResponse
++from django.middleware.csrf import get_token
++from django.views.decorators.http import require_http_methods
++
++from .models import Activity, CoinTransaction, Event, Redemption, Reward
++from .services import (
++    Conflict,
++    apply_to_event,
++    issue_reward,
++    purchase_reward,
++    require_coordinator,
++    review_activity,
++    submit_hours,
++)
++
++
++def endpoint(methods, *, public=False):
++    def decorator(view):
++        @require_http_methods(methods)
++        @wraps(view)
++        def wrapped(request, *args, **kwargs):
++            if not public and (
++                not request.user.is_authenticated or not request.user.is_active
++            ):
++                return JsonResponse({"error": "Требуется вход."}, status=401)
++            try:
++                request.data = {}
++                if request.method == "POST":
++                    request.data = json.loads(request.body or b"{}")
++                    if not isinstance(request.data, dict):
++                        raise ValidationError("Ожидается JSON-объект.")
++                return view(request, *args, **kwargs)
++            except PermissionDenied as exc:
++                return JsonResponse({"error": str(exc)}, status=403)
++            except ObjectDoesNotExist:
++                return JsonResponse({"error": "Объект не найден."}, status=404)
++            except Conflict as exc:
++                return JsonResponse({"error": "; ".join(exc.messages)}, status=409)
++            except ValidationError as exc:
++                return JsonResponse({"error": "; ".join(exc.messages)}, status=400)
++            except (
++                json.JSONDecodeError,
++                UnicodeDecodeError,
++                KeyError,
++                TypeError,
++                ValueError,
++            ):
++                return JsonResponse(
++                    {"error": "Некорректный JSON или отсутствует обязательное поле."},
++                    status=400,
++                )
++
++        return wrapped
++
++    return decorator
++
++
++def activity_data(obj):
++    return {
++        "id": obj.pk,
++        "volunteer_id": obj.volunteer_id,
++        "event_id": obj.event_id,
++        "requested_hours": obj.requested_hours,
++        "confirmed_hours": obj.confirmed_hours,
++        "status": obj.status,
++        "review_note": obj.review_note,
++        "reviewed_by_id": obj.reviewed_by_id,
++        "reviewed_at": obj.reviewed_at,
++    }
++
++
++def redemption_data(obj):
++    return {
++        "id": obj.pk,
++        "volunteer_id": obj.volunteer_id,
++        "reward_id": obj.reward_id,
++        "price": obj.price,
++        "status": obj.status,
++        "created_at": obj.created_at,
++        "issued_by_id": obj.issued_by_id,
++        "issued_at": obj.issued_at,
++    }
++
++
++@endpoint(["GET"], public=True)
++def csrf(request):
++    return JsonResponse({"csrfToken": get_token(request)})
++
++
++@endpoint(["POST"], public=True)
++def session_login(request):
++    username, password = request.data["username"], request.data["password"]
++    if not isinstance(username, str) or not isinstance(password, str):
++        raise ValidationError("Логин и пароль должны быть строками.")
++    user = authenticate(request, username=username, password=password)
++    if user is None:
++        return JsonResponse({"error": "Неверный логин или пароль."}, status=401)
++    login(request, user)
++    return JsonResponse(
++        {"id": user.pk, "username": user.username, "csrfToken": get_token(request)}
++    )
++
++
++@endpoint(["POST"])
++def session_logout(request):
++    logout(request)
++    return JsonResponse({"ok": True})
++
++
++@endpoint(["GET"], public=True)
++def events(request):
++    return JsonResponse(
++        {
++            "results": list(
++                Event.objects.filter(is_active=True).values(
++                    "id", "title", "description", "location", "starts_at"
++                )
++            )
++        }
++    )
++
++
++@endpoint(["GET"], public=True)
++def rewards(request):
++    return JsonResponse(
++        {
++            "results": list(
++                Reward.objects.filter(is_active=True).values(
++                    "id", "title", "description", "price"
++                )
++            )
++        }
++    )
++
++
++@endpoint(["GET"])
++def me(request):
++    profile = VolunteerProfile.objects.filter(user=request.user).first()
++    return JsonResponse(
++        {
++            "id": request.user.pk,
++            "username": request.user.username,
++            "name": request.user.get_full_name(),
++            "balance": profile.balance if profile else 0,
++            "confirmed_hours": profile.confirmed_hours if profile else "0.0",
++            "can_review": request.user.is_staff
++            and request.user.has_perm("catalog.review_activity"),
++        }
++    )
++
++
++@endpoint(["POST"])
++def apply(request, event_id):
++    obj, created = apply_to_event(volunteer=request.user, event_id=event_id)
++    return JsonResponse(activity_data(obj), status=201 if created else 200)
++
++
++@endpoint(["GET"])
++def my_activities(request):
++    return JsonResponse(
++        {
++            "results": [
++                activity_data(obj)
++                for obj in Activity.objects.filter(volunteer=request.user)
++            ]
++        }
++    )
++
++
++@endpoint(["POST"])
++def hours(request, activity_id):
++    obj = submit_hours(
++        volunteer=request.user, activity_id=activity_id, hours=request.data["hours"]
++    )
++    return JsonResponse(activity_data(obj))
++
++
++@endpoint(["GET"])
++def my_transactions(request):
++    return JsonResponse(
++        {
++            "results": list(
++                CoinTransaction.objects.filter(volunteer=request.user).values(
++                    "id",
++                    "amount",
++                    "description",
++                    "activity_id",
++                    "redemption_id",
++                    "created_at",
++                )
++            )
++        }
++    )
++
++
++@endpoint(["POST"])
++def purchase(request, reward_id):
++    obj, created = purchase_reward(
++        volunteer=request.user,
++        reward_id=reward_id,
++        request_key=request.data["request_key"],
++    )
++    return JsonResponse(redemption_data(obj), status=201 if created else 200)
++
++
++@endpoint(["GET"])
++def my_redemptions(request):
++    return JsonResponse(
++        {
++            "results": [
++                redemption_data(obj)
++                for obj in Redemption.objects.filter(volunteer=request.user)
++            ]
++        }
++    )
++
++
++@endpoint(["GET"])
++def coordinator_activities(request):
++    require_coordinator(request.user, "review_activity")
++    queryset = Activity.objects.all()
++    if status := request.GET.get("status"):
++        queryset = queryset.filter(status=status)
++    return JsonResponse({"results": [activity_data(obj) for obj in queryset]})
++
++
++@endpoint(["POST"])
++def review(request, activity_id):
++    note = request.data.get("note", "")
++    if not isinstance(note, str):
++        raise ValidationError("Комментарий должен быть строкой.")
++    obj = review_activity(
++        coordinator=request.user,
++        activity_id=activity_id,
++        decision=request.data["decision"],
++        hours=request.data.get("hours"),
++        note=note,
++    )
++    return JsonResponse(activity_data(obj))
++
++
++@endpoint(["GET"])
++def coordinator_redemptions(request):
++    require_coordinator(request.user, "fulfill_redemption")
++    return JsonResponse(
++        {"results": [redemption_data(obj) for obj in Redemption.objects.all()]}
++    )
++
++
++@endpoint(["POST"])
++def issue(request, redemption_id):
++    obj = issue_reward(coordinator=request.user, redemption_id=redemption_id)
++    return JsonResponse(redemption_data(obj))
+diff --git a/README.md b/README.md
+index 2481100..ba95383 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,103 @@
+-# Obninsk_Hakaton2
++# Цифровой волонтёр Обнинска — backend и админ-панель
+ 
+-Hello everybody! Мы team_escape. 
+\ No newline at end of file
++Django 6.0.9, Python 3.12+, SQLite. Интерфейс координатора — встроенная Django Admin на русском языке. Для пользовательского фронтенда подготовлен JSON API с сессионной авторизацией.
++
++## Быстрый запуск
++
++В корне репозитория, рядом с `requirements.txt`:
++
++```bash
++python -m venv .venv
++```
++
++Активировать окружение:
++
++- Windows PowerShell: `.venv\Scripts\Activate.ps1`
++- Windows cmd: `.venv\Scripts\activate.bat`
++- Linux/macOS: `source .venv/bin/activate`
++
++Далее:
++
++```bash
++python -m pip install -r requirements.txt
++cd Obninsk_Hakaton2
++python manage.py migrate
++python manage.py seed_demo
++python manage.py runserver
++```
++
++Админка: http://127.0.0.1:8000/admin/
++
++| Роль | Логин | Учебный пароль |
++|---|---|---|
++| Координатор | `coordinator` | `Demo-Obninsk-2026!` |
++| Волонтёр (вход через API) | `volunteer` | `Demo-Obninsk-2026!` |
++
++`seed_demo` создаёт три события, три поощрения и группу «Координаторы». Повторный запуск не сбрасывает балансы, не дублирует учебные объекты и не меняет пароли/права существующих пользователей. Аккаунт координатора не является суперпользователем и не может назначать себе или другим права.
++
++Если нужен администратор пользователей: `python manage.py createsuperuser`.
++
++## Работа координатора
++
++1. Открыть «Заявки и подтверждение часов».
++2. Найти заявку по мероприятию, статусу или имени волонтёра.
++3. Нажать «Проверить часы», указать фактические часы и подтвердить; для отказа выбрать «Отклонить заявку» и написать причину.
++4. В «Карточках волонтёров» проверить баланс и общее количество подтверждённых часов, а в «Истории операций с койнами» — основание начисления.
++5. В «Запросах на выдачу поощрений» выбрать запрос и действие «Отметить условную выдачу поощрения».
++
++Пока фронтенд не подключён, координатор может создать заявку кнопкой «Добавить»: выбрать волонтёра, событие и заявленные часы. Создание заявки ничего не начисляет. Решение принимается отдельно через «Проверить часы».
++
++Мероприятия и поощрения редактируются в своих разделах. Чтобы закрыть запись или убрать поощрение из каталога, снять соответствующий флажок активности.
++
++## Демонстрация и проверки
++
++Из папки с `manage.py`:
++
++```bash
++python manage.py demo_scenario
++python manage.py test catalog --settings=Obninsk_Hakaton2.test_settings --noinput
++```
++
++`demo_scenario` при каждом запуске создаёт нового учебного участника с недоступным паролем, подаёт заявку, заявляет 3 часа, подтверждает их координатором, запрашивает значок за 20 койнов и проверяет повторное начисление. Итог: **3 часа, операции +30 и −20, баланс 10**. Записи сохраняются и видны в админке. Это демонстрация бизнес-логики; полный HTTP-сценарий для фронтенда описан в [docs/API.md](docs/API.md).
++
++22 автоматических теста проверяют сценарий MVP, доступ по ролям, изоляцию пользовательских данных, CSRF, неизменяемость рассмотренных заявок в админке, повторные операции, недостаточный баланс и откат при ошибке записи истории. Два теста запускают операции одновременно в разных соединениях с файловой SQLite. Для них используется отдельная тестовая БД, которая удаляется после тестов.
++
++## Что реализовано
++
++- Карточка волонтёра с балансом и подтверждёнными часами.
++- Каталог мероприятий, запись и отправка часов на проверку.
++- Подтверждение/отклонение с сохранением координатора, даты и комментария.
++- Курс **1 час = 10 койнов**, дробные часы с шагом 0.1, от 0.1 до 24 часов на заявку.
++- Учебный магазин, списание при создании запроса, отметка выдачи без повторного списания.
++- История операций со ссылкой на заявку или запрос на поощрение.
++- API для фронтенда: [docs/API.md](docs/API.md).
++
++## Защита учёта
++
++Все бизнес-операции находятся в `catalog/services.py`. Подтверждение, изменение баланса и запись истории выполняются в одной транзакции. Покупка также атомарна. В SQLite включён `transaction_mode=IMMEDIATE`, чтобы конкурирующие записи сериализовались; одного `select_for_update()` для SQLite недостаточно. [Документация Django](https://docs.djangoproject.com/en/6.0/ref/databases/#sqlite-notes).
++
++На уровне БД ограничены повторные заявки на одно событие, повторные начисления за одну заявку и повторные покупки с одним ключом запроса. Списание использует условие `balance >= price`. Цена берётся из БД и сохраняется в запросе. Пользователь берётся из сессии, а не из присланного JSON.
++
++В админке нельзя вручную изменить баланс, часы подтверждённой заявки или историю, удалить учётную запись операции или повторно открыть рассмотренную заявку. Координатор не может подтверждать собственное участие. `is_staff` сам по себе не даёт права начислять койны: требуется `catalog.review_activity`. Для выдачи нужно `catalog.fulfill_redemption`.
++
++## Структура
++
++```text
++Obninsk_Hakaton2/
++  accounts/models.py          — карточка и баланс волонтёра
++  accounts/admin.py           — просмотр карточек
++  catalog/models.py           — события, заявки, награды, запросы, операции
++  catalog/services.py         — бизнес-логика и транзакции
++  catalog/admin.py            — интерфейс координатора
++  catalog/forms.py            — форма решения по часам
++  catalog/views.py, urls.py   — JSON API
++  catalog/management/commands/ — seed_demo и demo_scenario
++  catalog/tests.py            — функциональные проверки
++  catalog/test_concurrency.py — конкурентные операции
++```
++
++## Границы MVP
++
++Это локальная учебная система; койны не являются деньгами и не гарантируют настоящую награду. Волонтёрский графический интерфейс, самостоятельная регистрация, отмена покупки с возвратом, рейтинги и интеграции не входят в эту backend-реализацию. Пользователей создаёт суперпользователь, либо используется `seed_demo`. Одна заявка на пользователя и событие; отказ окончательный, повторная подача в MVP отсутствует.
++
++Настройки по умолчанию предназначены для локальной демонстрации. Для развёртывания нужно настроить HTTPS, secure cookies, секрет и допустимые хосты, а также ограничение попыток входа. Переменные `DJANGO_SECRET_KEY`, `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS` читаются из окружения; `.env` автоматически не загружается. Нельзя публиковать учебные аккаунты с общим паролем. Тестирование выполнялось на SQLite; перенос на PostgreSQL требует отдельной конфигурации и проверки.
+diff --git a/docs/API.md b/docs/API.md
+new file mode 100644
+index 0000000..9e963a5
+--- /dev/null
++++ b/docs/API.md
+@@ -0,0 +1,115 @@
++# API для фронтенда
++
++Базовый путь `/api/`. Все адреса заканчиваются `/`. Тела POST — JSON. Авторизация — Django session cookie. Для запросов, меняющих данные, обязателен CSRF. Используйте тот же origin, что и backend, либо dev-proxy для `/api/`; CORS для отдельного домена в этом MVP не настроен.
++
++## Авторизация
++
++1. `GET /api/auth/csrf/` устанавливает CSRF-cookie и возвращает `csrfToken`.
++2. `POST /api/auth/login/` с `{ "username": "volunteer", "password": "Demo-Obninsk-2026!" }` и заголовком `X-CSRFToken`.
++3. Сохранить новый `csrfToken` из ответа входа: Django меняет токен при логине.
++4. Дальнейшие POST отправлять с cookie и новым `X-CSRFToken`.
++5. `POST /api/auth/logout/` завершает сессию.
++
++Пример клиента (в браузере на том же origin):
++
++```javascript
++let csrfToken;
++async function api(path, body) {
++  const response = await fetch(`/api/${path}`, {
++    method: body === undefined ? 'GET' : 'POST',
++    credentials: 'same-origin',
++    headers: body === undefined ? {} : {
++      'Content-Type': 'application/json',
++      'X-CSRFToken': csrfToken,
++    },
++    body: body === undefined ? undefined : JSON.stringify(body),
++  });
++  const text = await response.text();
++  let data;
++  try { data = JSON.parse(text); } catch { data = { error: text }; }
++  if (!response.ok) throw new Error(`${response.status}: ${data.error || text}`);
++  return data;
++}
++async function signIn(username) {
++  csrfToken = (await api('auth/csrf/')).csrfToken;
++  const result = await api('auth/login/', {
++    username, password: 'Demo-Obninsk-2026!',
++  });
++  csrfToken = result.csrfToken;
++  return result;
++}
++```
++
++## Контракт
++
++| Метод и путь после `/api/` | Доступ | Тело / назначение |
++|---|---|---|
++| `GET events/` | Все | Доступные мероприятия |
++| `GET rewards/` | Все | Активные поощрения и цены |
++| `GET me/` | Вход | Имя, баланс, подтверждённые часы |
++| `POST events/{id}/apply/` | Вход | `{}`; заявка текущего пользователя |
++| `GET me/activities/` | Вход | Собственные заявки и решения |
++| `POST activities/{id}/hours/` | Владелец заявки | `{ "hours": "3.0" }`; заявить часы без начисления |
++| `GET me/transactions/` | Вход | Своя история начислений и списаний |
++| `POST rewards/{id}/purchase/` | Вход | `{ "request_key": "UUID" }` |
++| `GET me/redemptions/` | Вход | Свои запросы на поощрения |
++| `GET coordinator/activities/?status=pending` | Координатор с правом проверки | Список заявок; фильтр статуса необязателен |
++| `POST coordinator/activities/{id}/review/` | Координатор с правом проверки | `{ "decision": "approved", "hours": "3.0", "note": "Участие проверено" }` |
++| `POST coordinator/activities/{id}/review/` | Координатор с правом проверки | `{ "decision": "rejected", "note": "Причина отказа" }` |
++| `GET coordinator/redemptions/` | Координатор с правом выдачи | Все запросы на поощрения |
++| `POST coordinator/redemptions/{id}/issue/` | Координатор с правом выдачи | `{}`; отметить условную выдачу |
++
++Списки возвращаются как `{ "results": [...] }`. В этом небольшом MVP пагинации нет. Decimal-часы в ответе — строки. Койны и цена — целые числа. Дата/время — ISO 8601, в БД используется UTC, в админке — московское время.
++
++Для подтверждения обязательно передавать фактические `hours`; заявленные часы могут отличаться. Для отклонения обязателен непустой комментарий. Дробные часы допустимы с шагом 0.1, до 24 часов на заявку. Изменение часов после решения запрещено.
++
++Заявка повторно возвращается с тем же ID. При покупке генерируйте ключ через `crypto.randomUUID()` **один раз на намерение купить** и сохраняйте его для сетевых повторов. Новый ключ означает новую покупку. Повтор с тем же ключом возвращает прежний запрос без списания, даже если цена уже изменилась. Один ключ нельзя использовать для другого поощрения.
++
++## Полный сценарий HTTP
++
++После `seed_demo` на новом учебном пользователе, с функциями `api` и `signIn` из примера выше:
++
++```javascript
++await signIn('volunteer');
++const event = (await api('events/')).results[0];
++const activity = await api(`events/${event.id}/apply/`, {});
++await api(`activities/${activity.id}/hours/`, { hours: '3.0' });
++console.log(await api('me/')); // balance: 0
++
++await signIn('coordinator');
++await api(`coordinator/activities/${activity.id}/review/`, {
++  decision: 'approved', hours: '3.0', note: 'Учебная проверка',
++});
++
++await signIn('volunteer');
++console.log(await api('me/')); // balance: 30, confirmed_hours: "3.0"
++const reward = (await api('rewards/')).results.find(item => item.price === 20);
++const requestKey = crypto.randomUUID();
++const redemption = await api(`rewards/${reward.id}/purchase/`, { request_key: requestKey });
++console.log(await api('me/')); // balance: 10
++console.log(await api('me/transactions/')); // +30 и -20 с основаниями
++
++await signIn('coordinator');
++console.log(await api('coordinator/redemptions/'));
++await api(`coordinator/redemptions/${redemption.id}/issue/`, {});
++try {
++  await api(`coordinator/activities/${activity.id}/review/`, {
++    decision: 'approved', hours: '3.0',
++  });
++} catch (error) {
++  console.log(error.message); // 409: заявка уже рассмотрена
++}
++```
++
++Повторять демонстрацию следует с новой учётной записью или другим событием: рассмотренная заявка намеренно не сбрасывается. Вместо API-подтверждения можно войти координатором в `/admin/` и воспользоваться «Проверить часы».
++
++## Ошибки
++
++- `400` — некорректный JSON, часы, UUID или отсутствующее поле.
++- `401` — не выполнен вход / неверные учётные данные.
++- `403` — нет прав или ошибка CSRF; Django может вернуть HTML для CSRF.
++- `404` — объект отсутствует либо заявка принадлежит другому пользователю.
++- `409` — заявка уже рассмотрена, недостаточно койнов, поощрение недоступно и другие конфликты состояния.
++- `405` — неподдерживаемый HTTP-метод.
++
++Бизнес-ошибки возвращаются как `{ "error": "Понятное описание" }`. При успешном создании заявки/покупки возвращается `201`; при безопасном повторе — `200`.
+diff --git a/requirements.txt b/requirements.txt
+new file mode 100644
+index 0000000..146db98
+--- /dev/null
++++ b/requirements.txt
+@@ -0,0 +1 @@
++Django==6.0.9

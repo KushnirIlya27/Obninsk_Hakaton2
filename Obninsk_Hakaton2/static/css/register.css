@@ -1,0 +1,72 @@
+#Main {
+    background-color: #01001C;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+#Window {
+    background-color: #0E162C;
+    width: 60%;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    border: 2px solid #00C0FE;
+}
+
+#Reg {
+    color: #00C0FE;
+    font-size: 1.5em;
+}
+
+#Login {
+    width: 180px;
+    height: 50px;
+    border-radius: 12px;
+    border: 2px solid #00C0FE;
+    margin: 10px;
+}
+
+#Password {
+    width: 180px;
+    height: 50px;
+    border-radius: 12px;
+    border: 2px solid #00C0FE;
+    margin: 10px;
+}
+
+#Password2 {
+    width: 180px;
+    height: 50px;
+    border-radius: 12px;
+    border: 2px solid #00C0FE;
+    margin: 10px;
+}
+
+#ActBtn {
+    width: 185px;
+    height: 60px;
+    border-radius: 12px;
+    border: 2px solid #00C0FE;
+    margin: 10px;
+}
+
+#Back {
+    font-size: 1.5em;
+    color: #00C0FE;
+    margin: 10px;
+    text-decoration: none;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* расстояние между полями */
+    max-width: 300px; /* по желанию */
+}

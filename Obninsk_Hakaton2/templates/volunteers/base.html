@@ -1,0 +1,5 @@
+{% load static %}<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}Цифровой волонтёр Обнинска{% endblock %}</title><link rel="stylesheet" href="{% static 'css/volunteer.css' %}"></head>
+<body><header><a class="brand" href="{% url 'profile' %}">Добрые дела · Обнинск</a><nav><span>{{ request.user.username }}</span>{% if request.user.is_staff %}<a href="{% url 'admin:index' %}">Координатору</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="quiet" type="submit">Выйти</button></form></nav></header>
+<main>{% for message in messages %}<div class="notice {{ message.tags }}" role="status">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+<footer>Учебный сервис. Койны не являются деньгами. Начисление — только после проверки координатором.</footer></body></html>
