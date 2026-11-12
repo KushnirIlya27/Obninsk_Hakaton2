@@ -1,4 +1,5 @@
 import BrandLogo from "./components/BrandLogo";
+import FaqHelp from "./components/FaqHelp";
 import { useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "./auth/useAuth";
@@ -291,6 +292,7 @@ const LoginPage = () => {
           </div>
         </div>
       </div>
+      <FaqHelp />
     </div>
   );
 };

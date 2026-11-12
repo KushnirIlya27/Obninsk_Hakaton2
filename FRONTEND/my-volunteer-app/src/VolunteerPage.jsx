@@ -1,4 +1,5 @@
 import BrandLogo from "./components/BrandLogo";
+import FaqHelp from "./components/FaqHelp";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "./auth/useAuth";
@@ -411,9 +412,7 @@ const VolunteerPage = () => {
           </div>
         </div>
 
-        <button className="absolute bottom-6 right-6 w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-slate-700 transition-colors">
-          <span className="font-bold text-lg">?</span>
-        </button>
+        <FaqHelp />
       </div>
     </div>
   );
