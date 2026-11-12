@@ -9,6 +9,17 @@ from django.core.validators import (
 )
 from django.db import models
 
+# Общий список типов волонтерства
+VOLUNTEER_TYPE_CHOICES = [
+    ('social', 'Социальное'),
+    ('environmental', 'Экологическое'),
+    ('cultural', 'Культурное (Творческое)'),
+    ('event', 'Событийное'),
+    ('sports', 'Спортивное'),
+    ('zoo', 'Зооволонтёрство'),
+    ('scientific', 'Научное'),
+]
+
 
 class Event(models.Model):
     title = models.CharField("Название", max_length=200)
@@ -27,6 +38,15 @@ class Event(models.Model):
         validators=[MinValueValidator(1), MaxValueValidator(100000)],
     )
     is_active = models.BooleanField("Открыта запись", default=True)
+    
+    # НОВОЕ ПОЛЕ ДЛЯ МЕРОПРИЯТИЯ
+    volunteer_type = models.CharField(
+        "Тип волонтерства",
+        max_length=20,
+        choices=VOLUNTEER_TYPE_CHOICES,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = "Мероприятие"
@@ -64,6 +84,15 @@ class EventTemplate(models.Model):
     coins_per_hour = models.PositiveIntegerField("Ставка, койнов в час", default=10,
         validators=[MinValueValidator(1), MaxValueValidator(100000)])
     is_active = models.BooleanField("Доступен", default=True)
+    
+    # НОВОЕ ПОЛЕ ДЛЯ ШАБЛОНА
+    volunteer_type = models.CharField(
+        "Тип волонтерства",
+        max_length=20,
+        choices=VOLUNTEER_TYPE_CHOICES,
+        null=True,
+        blank=True
+    )
 
     class Meta:
         verbose_name = "Шаблон мероприятия"

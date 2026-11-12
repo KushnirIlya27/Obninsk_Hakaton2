@@ -12,6 +12,10 @@ const VolunteerPage = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [group, setGroup] = useState("");
+  
+  // Новое состояние для типа волонтерства
+  const [volunteerType, setVolunteerType] = useState("");
+  
   const [isAgreed, setIsAgreed] = useState(false);
   const [errors, setErrors] = useState({});
   const [busy, setBusy] = useState(false);
@@ -30,7 +34,9 @@ const VolunteerPage = () => {
       validation.phone = "Введите 10 цифр телефона после +7";
     if (password.length < 8)
       validation.password = "Пароль должен содержать не менее 8 символов";
+    if (!volunteerType) validation.volunteerType = "Выберите тип волонтерства";
     if (!isAgreed) validation.terms = "Необходимо согласиться с правилами";
+    
     setErrors(validation);
     if (Object.keys(validation).length) return;
     
@@ -43,12 +49,13 @@ const VolunteerPage = () => {
         password2: password,
         email,
         group,
+        volunteer_type: volunteerType, // Отправляем новое поле
       });
       navigate("/dashboard");
     } catch (error) {
       const fields = fieldMessages(error);
       setErrors({
-        general: [error.message, fields.email, fields.group]
+        general: [error.message, fields.email, fields.group, fields.volunteer_type]
           .filter(Boolean)
           .join(" "),
         login: fields.username,
@@ -61,12 +68,9 @@ const VolunteerPage = () => {
   };
 
   return (
-    // ИЗМЕНЕНО: добавлены md:h-screen и md:overflow-hidden
-    <div className="min-h-screen md:h-screen w-full flex flex-col md:flex-row font-sans md:overflow-hidden">
+    <div className="min-h-screen w-full flex flex-col md:flex-row font-sans">
       {/* ЛЕВАЯ ПАНЕЛЬ */}
-      {/* ИЗМЕНЕНО: добавлен md:h-full */}
-      <div className="w-full md:w-[45%] md:h-full bg-[#14346b] text-white p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
-        {/* Логотип */}
+      <div className="w-full md:w-[45%] bg-[#14346b] text-white p-8 md:p-12 flex flex-col justify-between relative overflow-hidden">
         <div className="flex items-center gap-3 relative z-10">
           <BrandLogo />
           <div className="flex flex-col">
@@ -77,21 +81,10 @@ const VolunteerPage = () => {
           </div>
         </div>
 
-        {/* Центральный контент */}
         <div className="my-12 md:my-auto relative z-10 max-w-lg">
           <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-8">
-            <svg
-              className="w-7 h-7 text-blue-200"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-              />
+            <svg className="w-7 h-7 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </div>
 
@@ -115,25 +108,14 @@ const VolunteerPage = () => {
       </div>
 
       {/* ПРАВАЯ ПАНЕЛЬ */}
-      {/* ИЗМЕНЕНО: добавлен md:h-full */}
-      <div className="w-full md:w-[55%] md:h-full bg-white flex flex-col items-center p-6 md:p-12 relative overflow-y-auto">
+      <div className="w-full md:w-[55%] bg-white flex flex-col items-center p-6 md:p-12 relative overflow-y-auto">
         <div className="w-full max-w-xl my-auto">
           <button
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition-colors mb-8 text-sm font-medium"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-              />
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             Вернуться к выбору роли
           </button>
@@ -153,63 +135,32 @@ const VolunteerPage = () => {
           <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl mb-8">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
               <div>
                 <div className="text-xs text-slate-500">Вы входите как</div>
-                <div className="text-sm font-semibold text-slate-900">
-                  Волонтер
-                </div>
+                <div className="text-sm font-semibold text-slate-900">Волонтер</div>
               </div>
             </div>
-            <button
-              onClick={() => navigate("/")}
-              className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-            >
+            <button onClick={() => navigate("/")} className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors">
               Изменить
             </button>
           </div>
 
           {errors.general && (
-            <div
-              role="alert"
-              className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700"
-            >
+            <div role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-sm text-red-700">
               {errors.general}
             </div>
           )}
+          
           <form className="space-y-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Логин
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Логин</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                    />
-                  </svg>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                 </div>
                 <input
                   type="text"
@@ -222,16 +173,12 @@ const VolunteerPage = () => {
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.login ? "border-red-500" : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"} focus:ring-1 outline-none transition-all text-sm`}
                 />
               </div>
-              {errors.login && (
-                <p className="text-red-500 text-xs mt-1">{errors.login}</p>
-              )}
+              {errors.login && <p className="text-red-500 text-xs mt-1">{errors.login}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Электронная почта
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Электронная почта</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-slate-400 font-bold">@</span>
@@ -246,9 +193,7 @@ const VolunteerPage = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Номер телефона
-                </label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Номер телефона</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <span className="text-slate-400 font-bold">+7</span>
@@ -261,31 +206,15 @@ const VolunteerPage = () => {
                     className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.phone ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"} outline-none transition-all text-sm`}
                   />
                 </div>
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
-                )}
+                {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Название группы
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Название группы</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                 </div>
                 <input
                   type="text"
@@ -298,42 +227,57 @@ const VolunteerPage = () => {
               </div>
             </div>
 
-            {/* Пароль */}
+            {/* ОБНОВЛЕННЫЙ СПИСОК ТИПОВ ВОЛОНТЕРСТВА */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Пароль
-              </label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Направление волонтерства</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-slate-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
+                </div>
+                <select
+                  value={volunteerType}
+                  onChange={(e) => {
+                    setVolunteerType(e.target.value);
+                    if (errors.volunteerType) setErrors({ ...errors, volunteerType: null });
+                  }}
+                  className={`w-full pl-10 pr-4 py-3 rounded-xl border appearance-none bg-white ${errors.volunteerType ? "border-red-500" : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"} focus:ring-1 outline-none transition-all text-sm cursor-pointer`}
+                >
+                  <option value="" disabled>Выберите направление</option>
+                  <option value="social">Социальное</option>
+                  <option value="environmental">Экологическое</option>
+                  <option value="cultural">Культурное (Творческое)</option>
+                  <option value="event">Событийное</option>
+                  <option value="sports">Спортивное</option>
+                  <option value="zoo">Зооволонтёрство</option>
+                  <option value="scientific">Научное</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </div>
+              </div>
+              {errors.volunteerType && <p className="text-red-500 text-xs mt-1">{errors.volunteerType}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Пароль</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                 </div>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (errors.password)
-                      setErrors({ ...errors, password: null });
+                    if (errors.password) setErrors({ ...errors, password: null });
                   }}
                   placeholder="Не менее 8 символов"
                   className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.password ? "border-red-500 focus:border-red-500 focus:ring-red-500" : "border-slate-200 focus:border-blue-500 focus:ring-blue-500"} outline-none transition-all text-sm`}
                 />
               </div>
-              {errors.password && (
-                <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-              )}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             <div className="flex items-start gap-3 mt-6">
@@ -348,16 +292,10 @@ const VolunteerPage = () => {
                 className={`mt-1 w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 ${errors.terms ? "border-red-500 ring-1 ring-red-500" : ""}`}
               />
               <div>
-                <label
-                  htmlFor="terms-vol"
-                  className="text-xs text-slate-500 leading-relaxed cursor-pointer"
-                >
-                  {" "}
+                <label htmlFor="terms-vol" className="text-xs text-slate-500 leading-relaxed cursor-pointer">
                   Я согласен с правилами сервиса и обработкой персональных данных
                 </label>
-                {errors.terms && (
-                  <p className="text-red-500 text-xs mt-1">{errors.terms}</p>
-                )}
+                {errors.terms && <p className="text-red-500 text-xs mt-1">{errors.terms}</p>}
               </div>
             </div>
 
@@ -367,47 +305,18 @@ const VolunteerPage = () => {
               className="w-full bg-[#1e4b8f] hover:bg-[#15386d] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors mt-8"
             >
               {busy ? "Создаём профиль…" : "Создать профиль"}
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </form>
 
           <div className="flex items-center justify-center gap-2 mt-6 text-xs text-slate-400">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             Реальная регистрация и передача персональных данных не выполняются
           </div>
 
           <div className="text-center mt-4 text-sm text-slate-500">
             Уже есть аккаунт?{" "}
-            <Link
-              to="/login"
-              className="text-blue-600 hover:underline font-medium"
-            >
-              Войти
-            </Link>
+            <Link to="/login" className="text-blue-600 hover:underline font-medium">Войти</Link>
           </div>
         </div>
 

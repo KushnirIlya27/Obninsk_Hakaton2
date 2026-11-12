@@ -7,6 +7,17 @@ import { api, fieldMessages } from "./lib/api";
 import { useResource } from "./lib/useResource";
 import { Loading, Notice, ResourceError, Stat, Status } from "./components/ui";
 
+// Словарь для перевода типов волонтерства
+const TYPE_NAMES = {
+  social: "Социальное",
+  environmental: "Экологическое",
+  cultural: "Культурное",
+  event: "Событийное",
+  sports: "Спортивное",
+  zoo: "Зооволонтёрство",
+  scientific: "Научное",
+};
+
 function ReviewCard({ activity, onSaved }) {
   const [decision, setDecision] = useState("approved");
   const [hours, setHours] = useState(activity.requested_hours || "");
@@ -154,6 +165,7 @@ function EventCreator({ onSaved, initial = null, templateMode = false }) {
     starts_at: "",
     ends_at: "",
     coins_per_hour: "10",
+    volunteer_type: "", // ДОБАВЛЕНО
   };
   const [form, setForm] = useState({ ...empty, ...initial, starts_at: "", ends_at: "" });
   const [busy, setBusy] = useState(false);
@@ -199,76 +211,53 @@ function EventCreator({ onSaved, initial = null, templateMode = false }) {
       <div className="grid md:grid-cols-2 gap-4">
         <label className="field-label">
           Название
-          <input
-            className="field"
-            required
-            maxLength="200"
-            name="title"
-            value={form.title}
-            onChange={change}
-          />
+          <input className="field" required maxLength="200" name="title" value={form.title} onChange={change} />
         </label>
         <label className="field-label">
           Место
-          <input
-            className="field"
-            required
-            maxLength="200"
-            name="location"
-            value={form.location}
-            onChange={change}
-          />
+          <input className="field" required maxLength="200" name="location" value={form.location} onChange={change} />
         </label>
+        
+        {/* ДОБАВЛЕНО: Выпадающий список для типа волонтерства */}
+        <label className="field-label">
+          Направление (Тип) <span className="text-red-500">*</span>
+          <select 
+            className="field cursor-pointer" 
+            required // <--- СДЕЛАТЬ ОБЯЗАТЕЛЬНЫМ
+            name="volunteer_type" 
+            value={form.volunteer_type} 
+            onChange={change}
+          >
+            <option value="" disabled>Выберите направление</option>
+            <option value="social">Социальное</option>
+            <option value="environmental">Экологическое</option>
+            <option value="cultural">Культурное (Творческое)</option>
+            <option value="event">Событийное</option>
+            <option value="sports">Спортивное</option>
+            <option value="zoo">Зооволонтёрство</option>
+            <option value="scientific">Научное</option>
+          </select>
+        </label>
+
         {!templateMode && <label className="field-label">
           Начало
-          <input
-            className="field"
-            required
-            type="datetime-local"
-            name="starts_at"
-            value={form.starts_at}
-            onChange={change}
-          />
+          <input className="field" required type="datetime-local" name="starts_at" value={form.starts_at} onChange={change} />
         </label>}
         {!templateMode && <label className="field-label">
           Окончание
-          <input
-            className="field"
-            required
-            type="datetime-local"
-            name="ends_at"
-            value={form.ends_at}
-            onChange={change}
-          />
+          <input className="field" required type="datetime-local" name="ends_at" value={form.ends_at} onChange={change} />
         </label>}
       </div>
       <label className="field-label">
         Описание
-        <textarea
-          className="field"
-          rows="3"
-          name="description"
-          value={form.description}
-          onChange={change}
-        />
+        <textarea className="field" rows="3" name="description" value={form.description} onChange={change} />
       </label>
       <label className="field-label max-w-xs">
         Ставка, койнов в час
-        <input
-          className="field"
-          required
-          type="number"
-          min="1"
-          max="100000"
-          step="1"
-          name="coins_per_hour"
-          value={form.coins_per_hour}
-          onChange={change}
-        />
+        <input className="field" required type="number" min="1" max="100000" step="1" name="coins_per_hour" value={form.coins_per_hour} onChange={change} />
       </label>
       <p className="text-sm text-slate-500">
-        Коэффициент устанавливается отдельно при проверке отчёта, по умолчанию
-        1×.
+        Коэффициент устанавливается отдельно при проверке отчёта, по умолчанию 1×.
       </p>
       <button className="primary-button" disabled={busy}>
         {busy ? "Сохраняем…" : templateMode ? "Сохранить шаблон" : "Создать мероприятие"}
@@ -329,13 +318,17 @@ export default function CoordinatorDashboard() {
     } catch (error) { setError(error.message); }
     finally { setIssuing(null); }
   }
+  
   async function saveEventTemplate(event) {
     setSavingTemplateId(event.id);
     setError("");
     try {
       await api("coordinator/templates/", {
-        title: event.title, description: event.description,
-        location: event.location, coins_per_hour: event.coins_per_hour
+        title: event.title, 
+        description: event.description,
+        location: event.location, 
+        coins_per_hour: event.coins_per_hour,
+        volunteer_type: event.volunteer_type // ДОБАВЛЕНО
       });
       saved("Мероприятие сохранено как шаблон.");
       setSavedTemplateId(event.id);
@@ -343,6 +336,7 @@ export default function CoordinatorDashboard() {
     } catch (error) { setError(error.message); }
     finally { setSavingTemplateId(null); }
   }
+  
   async function archiveTemplate(id) {
     if (!window.confirm("Убрать шаблон из списка? Созданные мероприятия сохранятся.")) return;
     setArchivingId(id);
@@ -370,17 +364,13 @@ export default function CoordinatorDashboard() {
     finally { setIssuing(null); }
   }
 
-  // Получаем первые две буквы логина для аватарки
   const initials = user?.username ? user.username.slice(0, 2).toUpperCase() : "CO";
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans">
       
-      {/* ================= ОБНОВЛЕННАЯ ШАПКА ================= */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-4">
-          
-          {/* Логотип */}
           <Link to="/coordinator-dashboard" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-slate-50 border border-slate-100">
               <BrandLogo />
@@ -388,10 +378,7 @@ export default function CoordinatorDashboard() {
             <span className="font-extrabold text-[#14346b] text-lg hidden sm:block">ИАТЭ · Координатор</span>
           </Link>
 
-          {/* Правая часть */}
           <div className="flex items-center gap-2 md:gap-5">
-            
-            {/* Ссылки */}
             <nav className="hidden md:flex items-center gap-1">
               <a href="/admin/" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-[#1e4b8f] hover:bg-slate-50 rounded-lg transition-colors">
                 Django Admin
@@ -401,10 +388,8 @@ export default function CoordinatorDashboard() {
               </Link>
             </nav>
 
-            {/* Разделитель */}
             <div className="hidden md:block w-px h-6 bg-slate-200"></div>
 
-            {/* Профиль пользователя */}
             <div className="flex items-center gap-3 pl-1">
               <div className="w-8 h-8 rounded-full bg-blue-100 text-[#1e4b8f] flex items-center justify-center font-bold text-xs ring-2 ring-white">
                 {initials}
@@ -412,7 +397,6 @@ export default function CoordinatorDashboard() {
               <span className="text-sm font-semibold text-slate-700 hidden sm:block">{user?.username}</span>
             </div>
 
-            {/* Кнопка выхода */}
             <button 
               onClick={logout}
               className="ml-2 flex items-center gap-2 px-3 py-2 md:px-4 text-sm font-medium text-slate-600 border border-slate-300 rounded-xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all"
@@ -425,7 +409,6 @@ export default function CoordinatorDashboard() {
           </div>
         </div>
       </header>
-      {/* ====================================================== */}
 
       <main className="page-shell">
         <div className="flex justify-between gap-4 items-center mb-7">
@@ -519,6 +502,7 @@ export default function CoordinatorDashboard() {
             )}
           </>
         )}
+        
         {tab === "templates" && (
           <div className="space-y-6">
             <EventCreator templateMode onSaved={saved} />
@@ -528,7 +512,15 @@ export default function CoordinatorDashboard() {
               {(templates.data?.results || []).map((template) => (
                 <article className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4" key={template.id}>
                   <div className="flex-1">
-                    <h2 className="text-xl font-bold text-slate-900">{template.title}</h2>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h2 className="text-xl font-bold text-slate-900">{template.title}</h2>
+                      {/* ДОБАВЛЕНО: Отображение типа в шаблоне */}
+                      {template.volunteer_type && (
+                        <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2 py-1 rounded-md">
+                          {TYPE_NAMES[template.volunteer_type] || template.volunteer_type}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-slate-500 mt-2 mb-3">
                       <span className="flex items-center gap-1.5">
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
@@ -572,6 +564,7 @@ export default function CoordinatorDashboard() {
             {templates.data && !templates.data.results.length && <p className="panel text-slate-500">Сохраните первый шаблон — его смогут использовать координаторы.</p>}
           </div>
         )}
+        
         {tab === "events" && (
           <div className="space-y-6">
             <EventCreator key={chosenTemplate?.id || "new"} initial={chosenTemplate} onSaved={saved} />
@@ -593,7 +586,15 @@ export default function CoordinatorDashboard() {
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                       </div>
                       <div>
-                        <h3 className="font-bold text-slate-900 text-lg">{event.title}</h3>
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-bold text-slate-900 text-lg">{event.title}</h3>
+                          {/* ДОБАВЛЕНО: Отображение типа в мероприятии */}
+                          {event.volunteer_type && (
+                            <span className="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-0.5 rounded">
+                              {TYPE_NAMES[event.volunteer_type] || event.volunteer_type}
+                            </span>
+                          )}
+                        </div>
                         <div className={`flex items-center gap-2 mt-1 text-xs font-medium ${event.is_active ? "text-green-600" : "text-slate-500"}`}>
                           <span className={`w-2 h-2 rounded-full ${event.is_active ? "bg-green-500" : "bg-slate-400"}`}></span>
                           {event.is_active ? "Запись открыта" : "Запись закрыта"}

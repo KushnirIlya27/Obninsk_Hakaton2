@@ -12,8 +12,16 @@ class CustomUserCreationForm(UserCreationForm):
         required=True, max_length=2000, label="Группа", widget=forms.Textarea
     )
 
+    # ОБЪЯВЛЯЕМ ПОЛЕ ФОРМЫ НА ОСНОВЕ ВЫБОРА ИЗ МОДЕЛИ
+    volunteer_type = forms.ChoiceField(
+        choices=VolunteerProfile.VOLUNTEER_TYPE_CHOICES,
+        required=False,
+        label="Направление волонтерства"
+    )
+
     class Meta(UserCreationForm.Meta):
         model = User
+        # volunteer_type здесь УБРАН, так как его нет в модели User
         fields = ("username", "email", "phone", "group", "password1", "password2")
 
     def clean_username(self):
@@ -48,5 +56,7 @@ class CustomUserCreationForm(UserCreationForm):
             profile.phone = self.cleaned_data["phone"]
             profile.email = self.cleaned_data["email"]
             profile.group = self.cleaned_data["group"]
+            # Сохраняем выбранный тип волонтерства
+            profile.volunteer_type = self.cleaned_data.get("volunteer_type")
             profile.save()
         return user
