@@ -30,6 +30,7 @@ class ReadOnlyAdmin(admin.ModelAdmin):
 class EventAdmin(admin.ModelAdmin):
     list_display = [
         "title",
+        "type_event",
         "starts_at",
         "ends_at",
         "location",
@@ -220,6 +221,6 @@ class RedemptionAdmin(ReadOnlyAdmin):
 
 @admin.register(EventTemplate)
 class EventTemplateAdmin(admin.ModelAdmin):
-    list_display = ["title", "location", "coins_per_hour", "is_active"]
+    list_display = ["title","type_event", "location", "coins_per_hour", "is_active"]
     list_filter = ["is_active"]
     search_fields = ["title", "location"]

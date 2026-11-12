@@ -12,6 +12,7 @@ from django.db import models
 
 class Event(models.Model):
     title = models.CharField("Название", max_length=200)
+    type_event = models.CharField("Тип мероприятия", max_length=200)
     description = models.TextField("Описание", blank=True)
     location = models.CharField("Место", max_length=200)
     starts_at = models.DateTimeField("Начало")
@@ -59,6 +60,7 @@ class Event(models.Model):
 
 class EventTemplate(models.Model):
     title = models.CharField("Название", max_length=200)
+    type_event = models.CharField("Тип мероприятия", max_length=200)
     description = models.TextField("Описание", blank=True)
     location = models.CharField("Место", max_length=200)
     coins_per_hour = models.PositiveIntegerField("Ставка, койнов в час", default=10,
@@ -93,6 +95,7 @@ class Activity(models.Model):
     event = models.ForeignKey(
         Event, on_delete=models.PROTECT, verbose_name="Мероприятие"
     )
+
     requested_hours = models.DecimalField(
         "Заявленные часы",
         max_digits=3,

@@ -146,6 +146,9 @@ def review_activity(
         raise ValidationError(
             "По этой формуле получается меньше 1 койна. Проверьте часы и коэффициент."
         )
+
+
+
     changed = Activity.objects.filter(
         pk=activity.pk, status=Activity.Status.PENDING
     ).update(
@@ -157,16 +160,35 @@ def review_activity(
         multiplier=factor,
         coins_awarded=coins,
     )
+
     if changed != 1:
         raise Conflict("Заявка уже рассмотрена.")
     if confirmed is not None:
         profile, _ = VolunteerProfile.objects.get_or_create(
             user_id=activity.volunteer_id
         )
-        VolunteerProfile.objects.filter(pk=profile.pk).update(
-            balance=F("balance") + coins,
-            confirmed_hours=F("confirmed_hours") + confirmed,
-        )
+
+        update_data = {
+            "balance":F("balance") + coins,
+        }
+
+        if activity.event.type_event == "Социальное":
+            update_data["social_volunteering_hours"] = F("social_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Экологическое":
+            update_data["environmental_volunteering_hours"] = F("environmental_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Культурное":
+            update_data["cultural_volunteering_hours"] = F("cultural_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Событийное":
+            update_data["event_volunteering_hours"] = F("event_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Спортивное":
+            update_data["sports_volunteering_hours"] = F("sports_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Зооволонтёрство":
+            update_data["zoo_volunteering_hours"] = F("zoo_volunteering_hours") + confirmed
+        elif activity.event.type_event == "Научное":
+            update_data["scientific_volunteering_hours"] = F("scientific_volunteering_hours") + confirmed
+
+        VolunteerProfile.objects.filter(pk=profile.pk).update(**update_data)
+
         CoinTransaction.objects.create(
             volunteer_id=activity.volunteer_id,
             amount=coins,
