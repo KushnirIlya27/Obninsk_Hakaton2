@@ -1,4 +1,5 @@
 import BrandLogo from "./components/BrandLogo";
+import FaqHelp from "./components/FaqHelp";
 import { useState } from "react";
 import { useAuth } from "./auth/useAuth";
 import { Notice } from "./components/ui";
@@ -287,10 +288,7 @@ const VolunteerLayout = () => {
       </div>
       <Outlet context={{ userLogin }} />
 
-      {/* Плавающая кнопка помощи */}
-      <button className="fixed bottom-6 right-6 w-12 h-12 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-xl hover:bg-slate-700 transition-colors z-40">
-        <span className="font-bold text-xl">?</span>
-      </button>
+      <FaqHelp />
     </div>
   );
 };
