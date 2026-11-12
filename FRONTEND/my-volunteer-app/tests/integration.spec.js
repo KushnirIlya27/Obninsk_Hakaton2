@@ -55,7 +55,7 @@ test("регистрация → отчёт → 30 → покупка → 10; к
   await page.getByRole("button", { name: "Создать профиль" }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
-    page.getByRole("heading", { name: "Мероприятия Обнинска" }),
+    page.getByRole("heading", { name: "Мероприятия ИАТЭ" }),
   ).toBeVisible();
   expect(await balance(page)).toBe(0);
   const card = page

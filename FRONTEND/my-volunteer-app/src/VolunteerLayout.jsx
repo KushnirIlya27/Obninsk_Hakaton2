@@ -57,7 +57,7 @@ const VolunteerLayout = () => {
                 Цифровой волонтер
               </span>
               <span className="text-sm font-bold tracking-wider text-slate-900">
-                ОБНИНСКА
+                ИАТЭ
               </span>
             </div>
           </div>

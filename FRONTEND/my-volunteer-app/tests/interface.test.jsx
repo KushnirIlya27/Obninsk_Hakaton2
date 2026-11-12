@@ -40,7 +40,7 @@ function mount(path) {
 for (const path of ["/", "/login", "/volunteer", "/coordinator", "/dashboard", "/dashboard/rewards", "/dashboard/profile", "/coordinator-dashboard"]) {
   test(`Real logo and theme control are available at ${path}`, async () => {
     mount(path);
-    const logos = await screen.findAllByAltText("Цифровой волонтёр Обнинска");
+    const logos = await screen.findAllByAltText("Цифровой волонтёр ИАТЭ");
     expect(logos.some(logo => logo.getAttribute("src") === "/logo.png")).toBe(true);
     expect(screen.getByRole("button", { name: "Включить тёмную тему" })).toBeTruthy();
     expect(screen.queryByText(/демо-режим|демонстрационная|учебная система/i)).toBeNull();
