@@ -65,7 +65,7 @@ class Command(BaseCommand):
             VolunteerProfile.objects.get_or_create(user=user)
         for index, (title, location, rate) in enumerate(
             [
-                ("Уборка городского парка", "Городской парк Обнинска", 10),
+                ("Уборка городского парка", "Городской парк ИАТЭ", 10),
                 ("Помощь учебному приюту", "Учебный волонтёрский центр", 15),
                 ("Сбор книг для библиотеки", "Учебная библиотека", 20),
             ]
@@ -89,7 +89,7 @@ class Command(BaseCommand):
             Event.objects.get_or_create(
                 title="Учебное событие: помощь парку",
                 defaults={
-                    "location": "Обнинск",
+                    "location": "ИАТЭ",
                     "description": "Завершённое учебное событие для проверки отчёта.",
                     "starts_at": now - timedelta(hours=5),
                     "ends_at": now - timedelta(hours=2),

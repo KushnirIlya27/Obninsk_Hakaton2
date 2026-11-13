@@ -36,7 +36,7 @@ class ConcurrentOperationsTests(TransactionTestCase):
         )
         event = Event.objects.create(
             title="Parallel test",
-            location="Обнинск",
+            location="ИАТЭ",
             starts_at=timezone.now() - timedelta(hours=5),
         )
         self.activity, _ = apply_to_event(volunteer=self.volunteer, event_id=event.pk)

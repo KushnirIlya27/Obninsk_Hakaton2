@@ -30,7 +30,7 @@ class EventRateAndReportTests(TestCase):
         )
         cls.event = Event.objects.create(
             title="Уборка парка за 20",
-            location="Обнинск",
+            location="ИАТЭ",
             coins_per_hour=20,
             starts_at=timezone.now() - timedelta(hours=5),
             ends_at=timezone.now() - timedelta(hours=2),
@@ -120,7 +120,7 @@ class EventRateAndReportTests(TestCase):
         self.approve(self.report())
         second = Event.objects.create(
             title="Помощь приюту",
-            location="Обнинск",
+            location="ИАТЭ",
             coins_per_hour=15,
             starts_at=self.event.starts_at,
         )

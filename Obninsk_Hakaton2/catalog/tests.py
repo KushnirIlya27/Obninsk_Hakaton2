@@ -48,7 +48,7 @@ class VolunteerTests(TestCase):
         )
         cls.event = Event.objects.create(
             title="Уборка парка",
-            location="Обнинск",
+            location="ИАТЭ",
             starts_at=timezone.now() - timedelta(hours=5),
         )
         cls.reward = Reward.objects.create(title="Значок", price=20)

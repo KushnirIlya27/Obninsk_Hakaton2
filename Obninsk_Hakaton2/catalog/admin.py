@@ -9,7 +9,7 @@ from .forms import ReviewForm
 from .models import Activity, CoinTransaction, Event, EventTemplate, Redemption, Reward
 from .services import cancel_reward, issue_reward, require_coordinator, review_activity
 
-admin.site.site_header = "Цифровой волонтёр Обнинска"
+admin.site.site_header = "Цифровой волонтёр ИАТЭ"
 admin.site.site_title = "Панель координатора"
 admin.site.index_title = "Учёт добрых дел · учебная система"
 admin.site.index_template = "admin/volunteer_dashboard.html"

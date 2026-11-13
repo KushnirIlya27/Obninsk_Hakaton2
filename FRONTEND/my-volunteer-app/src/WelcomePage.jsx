@@ -19,7 +19,7 @@ const WelcomePage = () => {
             <span className="text-xs uppercase tracking-wider text-blue-200">
               Цифровой волонтер
             </span>
-            <span className="text-sm font-bold tracking-wider">ОБНИНСКА</span>
+            <span className="text-sm font-bold tracking-wider">ИАТЭ</span>
           </div>
         </div>
 
@@ -43,7 +43,7 @@ const WelcomePage = () => {
           </h1>
 
           <p className="text-blue-100 text-lg mb-12 max-w-md">
-            Участвуй в событиях Обнинска, собирай койны и получай городские
+            Участвуй в событиях ИАТЭ, собирай койны и получай городские
             поощрения.
           </p>
 

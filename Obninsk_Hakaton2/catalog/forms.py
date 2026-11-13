@@ -93,4 +93,5 @@ class EventForm(forms.ModelForm):
             "ends_at",
             "coins_per_hour",
             "is_active",
+            "volunteer_type",
         ]

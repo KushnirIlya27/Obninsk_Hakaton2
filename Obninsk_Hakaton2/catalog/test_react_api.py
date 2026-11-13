@@ -30,7 +30,7 @@ class ReactIntegrationApiTests(TestCase):
         )
         self.event = Event.objects.create(
             title="Участие React",
-            location="Обнинск",
+            location="ИАТЭ",
             coins_per_hour=10,
             starts_at=timezone.now() - timedelta(hours=5),
             ends_at=timezone.now() - timedelta(hours=2),

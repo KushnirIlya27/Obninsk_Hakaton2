@@ -38,7 +38,7 @@ test("React routes/forms use actual sessions, reports, balances and reward purch
   );
   await user.click(screen.getByRole("checkbox"));
   await user.click(screen.getByRole("button", { name: "Создать профиль" }));
-  await screen.findByRole("heading", { name: "Мероприятия Обнинска" });
+  await screen.findByRole("heading", { name: "Мероприятия ИАТЭ" });
   expect((await api("me/")).balance).toBe(0);
   const eventTitle = await screen.findByRole("heading", {
     name: "Уборка городского парка",
@@ -79,7 +79,7 @@ test("React routes/forms use actual sessions, reports, balances and reward purch
   await user.click(screen.getByRole("button", { name: "Выйти", exact: true }));
   await screen.findByRole("heading", { name: "Войти в аккаунт" });
   await signIn(user, username);
-  await screen.findByRole("heading", { name: "Мероприятия Обнинска" });
+  await screen.findByRole("heading", { name: "Мероприятия ИАТЭ" });
   expect((await api("me/")).balance).toBe(30);
   await user.click(
     screen.getAllByRole("link", { name: "Поощрения", exact: true })[0],

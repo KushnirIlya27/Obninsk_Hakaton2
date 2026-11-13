@@ -5,7 +5,7 @@ from accounts.models import VolunteerProfile
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.db import transaction, IntegrityError
-from django.db.models import Sum
+from django.db.models import Sum, Case, When, Value, IntegerField
 from django.utils import timezone
 from accounts.forms import CustomUserCreationForm
 from .forms import EventForm
@@ -112,6 +112,7 @@ def event_data(event):
         "coins_per_hour": event.coins_per_hour,
         "rate": event.coins_per_hour,
         "is_active": event.is_active,
+        "volunteer_type": event.volunteer_type,  # <--- ДОБАВЛЕНО
         "report_available_at": event.report_available_at,
     }
 
@@ -210,7 +211,25 @@ def session_logout(request):
 
 @endpoint(["GET"], public=True)
 def events(request):
-    results = [event_data(event) for event in Event.objects.filter(is_active=True)]
+    queryset = Event.objects.filter(is_active=True)
+
+    # Сортировка: сначала мероприятия, совпадающие с типом волонтерства пользователя
+    user_type = None
+    if request.user.is_authenticated and hasattr(request.user, "volunteerprofile"):
+        user_type = request.user.volunteerprofile.volunteer_type
+
+    if user_type:
+        queryset = queryset.annotate(
+            is_preferred=Case(
+                When(volunteer_type=user_type, then=Value(1)),
+                default=Value(0),
+                output_field=IntegerField(),
+            )
+        ).order_by("-is_preferred", "starts_at")
+    else:
+        queryset = queryset.order_by("starts_at")
+
+    results = [event_data(event) for event in queryset]
     own = (
         {a.event_id: a for a in Activity.objects.filter(volunteer=request.user)}
         if request.user.is_authenticated
@@ -246,9 +265,9 @@ def me(request):
             "username": request.user.username,
             "name": request.user.get_full_name(),
             "email": request.user.email,
-            # Используем переменную profile (с маленькой буквы)
             "phone": (profile.phone or "") if profile else "",
             "info": (profile.group or "") if profile else "",
+            "volunteer_type": (profile.volunteer_type or "") if profile else "", # <--- ДОБАВЛЕНО
             "can_issue": request.user.is_staff
             and request.user.has_perm("catalog.fulfill_redemption"),
             "can_manage_events": request.user.is_staff
@@ -463,8 +482,14 @@ def cancel(request, redemption_id):
 
 
 def template_data(obj):
-    return {"id": obj.pk, "title": obj.title, "description": obj.description,
-            "location": obj.location, "coins_per_hour": obj.coins_per_hour}
+    return {
+        "id": obj.pk, 
+        "title": obj.title, 
+        "description": obj.description,
+        "location": obj.location, 
+        "coins_per_hour": obj.coins_per_hour,
+        "volunteer_type": obj.volunteer_type # <--- ДОБАВЛЕНО
+    }
 
 
 @endpoint(["GET", "POST"])
@@ -478,8 +503,15 @@ def event_templates(request):
             raise ValidationError("Заполните название и место шаблона.")
     if not isinstance(data.get("description", ""), str):
         raise ValidationError("Описание должно быть строкой.")
-    obj = EventTemplate(title=data["title"].strip(), location=data["location"].strip(),
-        description=data.get("description", ""), coins_per_hour=data.get("coins_per_hour", 10))
+    
+    # ДОБАВЛЕНО сохранение volunteer_type
+    obj = EventTemplate(
+        title=data["title"].strip(), 
+        location=data["location"].strip(),
+        description=data.get("description", ""), 
+        coins_per_hour=data.get("coins_per_hour", 10),
+        volunteer_type=data.get("volunteer_type") 
+    )
     obj.full_clean()
     obj.save()
     return JsonResponse(template_data(obj), status=201)

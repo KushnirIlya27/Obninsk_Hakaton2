@@ -26,20 +26,20 @@ class ExistingAccountingMigrationTests(TransactionTestCase):
                 username="migration-coordinator", is_staff=True
             )
             event = Event.objects.create(
-                title="Старое событие", location="Обнинск", starts_at=timezone.now()
+                title="Старое событие", location="ИАТЭ", starts_at=timezone.now()
             )
             registered = Activity.objects.create(
                 volunteer_id=user.pk, event_id=event.pk
             )
             second_event = Event.objects.create(
-                title="Старый отчёт", location="Обнинск", starts_at=timezone.now()
+                title="Старый отчёт", location="ИАТЭ", starts_at=timezone.now()
             )
             pending = Activity.objects.create(
                 volunteer_id=user.pk, event_id=second_event.pk, requested_hours=3
             )
             third_event = Event.objects.create(
                 title="Старое подтверждение",
-                location="Обнинск",
+                location="ИАТЭ",
                 starts_at=timezone.now(),
             )
             approved = Activity.objects.create(
@@ -58,7 +58,7 @@ class ExistingAccountingMigrationTests(TransactionTestCase):
             )
             Profile.objects.create(user_id=user.pk, balance=30, confirmed_hours=3)
             fourth_event = Event.objects.create(
-                title="Старый отказ", location="Обнинск", starts_at=timezone.now()
+                title="Старый отказ", location="ИАТЭ", starts_at=timezone.now()
             )
             rejected = Activity.objects.create(
                 volunteer_id=user.pk,

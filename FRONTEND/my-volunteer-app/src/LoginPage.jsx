@@ -53,7 +53,7 @@ const LoginPage = () => {
             <span className="text-xs uppercase tracking-wider text-blue-200">
               Цифровой волонтер
             </span>
-            <span className="text-sm font-bold tracking-wider">ОБНИНСКА</span>
+            <span className="text-sm font-bold tracking-wider">ИАТЭ</span>
           </div>
         </div>
 

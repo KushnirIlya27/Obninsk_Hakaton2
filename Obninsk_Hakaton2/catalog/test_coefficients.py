@@ -74,7 +74,7 @@ class CoefficientAccountingTests(TestCase):
         )
         event = Event.objects.create(
             title="Коэффициент 1.05",
-            location="Обнинск",
+            location="ИАТЭ",
             coins_per_hour=20,
             starts_at=timezone.now() - timedelta(hours=5),
         )

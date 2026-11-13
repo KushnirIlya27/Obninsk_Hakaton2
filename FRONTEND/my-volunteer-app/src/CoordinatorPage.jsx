@@ -9,7 +9,7 @@ export default function CoordinatorPage() {
       <section className="bg-[#14346b] text-white p-10 md:p-16 flex flex-col justify-between md:h-full">
         <Link to="/" className="font-bold flex items-center gap-3">
           <BrandLogo />
-          Цифровой волонтёр Обнинска
+          Цифровой волонтёр ИАТЭ
         </Link>
         <div className="py-20">
           <p className="eyebrow text-[#8cd646]">Кабинет координатора</p>
