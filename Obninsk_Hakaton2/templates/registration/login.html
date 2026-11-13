@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <div id="Main">
+        <div id="Window">
+            <h2 id="Log">Вход</h2>
+            <form method="post" action="{% url 'login' %}">
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+                <input type="text" name="username" id="Login" placeholder="Логин" required>
+                <input type="password" name="password" id="Password" placeholder="Пароль" required>
+                <button type="submit" id="ActBtn">Войти</button>
+            </form>
+            <a id="Reg" href="{% url 'register' %}">Регистрация</a>
+        </div>
+    </div>
+
+</body>
+</html>

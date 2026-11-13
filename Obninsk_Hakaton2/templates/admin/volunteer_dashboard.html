@@ -1,0 +1,36 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'css/admin-dashboard.css' %}">
+{% endblock %}
+
+{% block content_title %}
+  <section class="volunteer-admin-hero" aria-labelledby="volunteer-admin-title">
+    <p class="volunteer-admin-label">Цифровой волонтёр Обнинска</p>
+    <h1 id="volunteer-admin-title">Рабочий стол координатора</h1>
+    <p>Мероприятия, волонтёрские часы и поощрения в одном месте.</p>
+  </section>
+{% endblock %}
+
+{% block content %}
+  {% for app in app_list %}
+    {% if app.app_label == 'catalog' %}
+      <nav class="volunteer-admin-shortcuts" aria-label="Быстрый доступ">
+        {% for model in app.models %}
+          {% if model.admin_url %}
+            {% if model.object_name == 'Activity' %}
+              <a href="{{ model.admin_url }}?status__exact=pending"><strong>Проверить отчёты</strong><span>Заявки, ожидающие решения</span></a>
+            {% elif model.object_name == 'Event' %}
+              <a href="{{ model.admin_url }}"><strong>Мероприятия</strong><span>Расписание, ставки и запись</span></a>
+            {% elif model.object_name == 'Redemption' %}
+              <a href="{{ model.admin_url }}?status__exact=pending"><strong>Выдать поощрения</strong><span>Запросы, ожидающие выдачи</span></a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </nav>
+    {% endif %}
+  {% endfor %}
+  {{ block.super }}
+{% endblock %}
