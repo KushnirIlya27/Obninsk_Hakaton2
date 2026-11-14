@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer components {
+  .page-shell {
+    @apply max-w-7xl mx-auto px-4 md:px-8 py-8;
+  }
+  .panel {
+    @apply bg-white border border-slate-100 rounded-3xl p-6 shadow-sm;
+  }
+  .hero-panel {
+    @apply bg-[#1e4b8f] text-white rounded-3xl p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-8;
+  }
+  .eyebrow {
+    @apply text-xs font-bold text-green-600 uppercase tracking-widest mb-3;
+  }
+  .primary-button {
+    @apply rounded-xl bg-[#1e4b8f] text-white px-5 py-3 text-sm font-semibold hover:bg-[#15386d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .secondary-button {
+    @apply rounded-xl border border-slate-200 bg-white text-slate-700 px-4 py-3 text-sm font-medium hover:bg-slate-50 disabled:opacity-50;
+  }
+  .field-label {
+    @apply block text-sm font-medium text-slate-700;
+  }
+  .field {
+    @apply mt-2 block w-full rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500;
+  }
+}
+dialog::backdrop {
+  background: rgb(15 23 42 / 55%);
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+
+:root {
+  color-scheme: light;
+  --page-bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-muted: #f1f5f9;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --line: #e2e8f0;
+  --accent-text: #1e4b8f;
+}
+:root.dark {
+  color-scheme: dark;
+  --page-bg: #0b1220;
+  --surface: #142033;
+  --surface-muted: #1c2b41;
+  --text-main: #edf2fa;
+  --text-muted: #adbbd0;
+  --line: #30415b;
+  --accent-text: #93c5fd;
+}
+body {
+  background: var(--page-bg);
+  color: var(--text-main);
+}
+.app-shell {
+  min-height: 100dvh;
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  background: var(--page-bg);
+}
+.brand-logo {
+  background: #fff;
+  padding: 2px;
+}
+.theme-toggle, .faq-trigger {
+  position: fixed;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-main);
+  box-shadow: 0 4px 24px rgb(15 23 42 / 15%);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 160ms, transform 160ms;
+}
+.theme-toggle { left: 1.25rem; }
+.faq-trigger { right: 1.25rem; background: #1e4b8f; border-color: #4774b3; color: #fff; }
+.theme-toggle:hover { background: var(--surface-muted); }
+.faq-trigger:hover { background: #15386d; }
+.faq-question-mark {
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgb(255 255 255 / 55%);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.faq-dialog {
+  padding: 0;
+  width: min(620px, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--text-main);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 25%);
+  overscroll-behavior: contain;
+}
+.faq-content { padding: 1.5rem; }
+.faq-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1.25rem; }
+.faq-close { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-muted); }
+.faq-item { border-top: 1px solid var(--line); }
+.faq-item:last-child { border-bottom: 1px solid var(--line); }
+.faq-item summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; font-size: 0.9375rem; font-weight: 600; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary span { font-size: 1.3rem; color: var(--accent-text); }
+.faq-item[open] summary span { transform: rotate(45deg); }
+.faq-item p { margin: 0 0 1.25rem; color: var(--text-muted); font-size: 0.875rem; line-height: 1.75; }
+summary:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+}
+/* Existing Tailwind surfaces share the same palette, including dynamic status cards. */
+.dark .bg-white, .dark .panel, .dark .secondary-button, .dark .field {
+  background-color: var(--surface);
+}
+.dark .bg-slate-50 { background-color: var(--page-bg); }
+.dark .bg-slate-100 { background-color: var(--surface-muted); }
+.dark .border-slate-100, .dark .border-slate-200, .dark .border-slate-300,
+.dark .panel, .dark .secondary-button, .dark .field { border-color: var(--line); }
+.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--line); }
+.dark .text-slate-900, .dark .field { color: var(--text-main); }
+.dark .text-slate-700, .dark .text-slate-600, .dark .field-label, .dark .secondary-button { color: #d3dfef; }
+.dark .text-slate-500, .dark .text-slate-400 { color: var(--text-muted); }
+.dark .text-blue-600, .dark .text-blue-700, .dark .text-blue-800, .dark .text-blue-900,
+.dark .text-\[\#1e4b8f\] { color: #93c5fd; }
+.dark .text-green-600, .dark .text-green-700, .dark .text-green-800 { color: #94dfab; }
+.dark .text-red-500, .dark .text-red-700 { color: #fca5a5; }
+.dark .bg-blue-50 { background-color: #182f4c; }
+.dark .bg-green-50, .dark .bg-green-100 { background-color: #153c32; }
+.dark .bg-orange-50 { background-color: #3c2c22; }
+.dark .bg-red-50, .dark .bg-red-100 { background-color: #45232e; }
+.dark .border-red-200, .dark .border-red-500 { border-color: #945365; }
+.dark .border-green-200 { border-color: #367556; }
+.dark .border-blue-100 { border-color: #34557a; }
+.dark .hover\:bg-slate-50:hover { background-color: var(--surface-muted); }
+.dark .hover\:text-slate-900:hover { color: #fff; }
+.dark .hover\:text-blue-800:hover { color: #bfdbfe; }
+.dark .group:hover .group-hover\:bg-blue-100 { background-color: #254974; }
+.dark .group:hover .group-hover\:bg-green-100 { background-color: #205441; }
+dialog:not(.faq-dialog) { background: var(--surface); color: var(--text-main); }
+input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 1; }
+@media (max-width: 380px) {
+  .theme-toggle { left: 0.75rem; padding-inline: 0.8rem; }
+  .faq-trigger { right: 0.75rem; }
+  .faq-content { padding: 1rem; }
+  .faq-header h2 { font-size: 1.25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

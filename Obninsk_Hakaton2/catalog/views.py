@@ -105,6 +105,7 @@ def event_data(event):
     return {
         "id": event.pk,
         "title": event.title,
+        "type_event": event.type_event,
         "description": event.description,
         "location": event.location,
         "starts_at": event.starts_at,
